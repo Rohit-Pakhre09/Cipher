@@ -1,8 +1,10 @@
 {
   "name": "frontend",
+  "description": "Modern real-time chat frontend with instant messaging, live updates, and a clean UI.",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "author": "Rohit Pakhre",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
