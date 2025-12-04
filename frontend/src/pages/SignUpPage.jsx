@@ -4,8 +4,7 @@ import { Eye, EyeOff, Loader2, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import AuthImagePattern from "../components/AuthImagePattern";
-
-// --- Custom SVG Icons as JSX Components ---
+import toast from "react-hot-toast";
 
 const UserSvg = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,7 +26,6 @@ const LockSvg = (props) => (
         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
     </svg>
 );
-// --- End Custom SVG Icons ---
 
 
 const SignUpPage = () => {
@@ -38,9 +36,8 @@ const SignUpPage = () => {
         password: ""
     });
 
-    const { signUp, isSigningUp } = useAuth();
+    const { signup, isSigningUp } = useAuth();
 
-    // NOTE: 'toast' must be imported or defined for this function to work
     const validateForm = () => {
         if (!formData.fullName.trim()) return toast.error("Full name is required");
         if (!formData.email.trim()) return toast.error("Email is required");
@@ -55,13 +52,13 @@ const SignUpPage = () => {
 
         const success = validateForm();
 
-        if (success === true) signUp(formData);
+        if (success === true) signup(formData);
     };
 
     return (
         <section className="min-h-screen grid lg:grid-cols-2">
 
-            {/* 1. Left Content: Sign Up Form Area */}
+            {/* 1. Left Content */}
             <div className="flex flex-col justify-center items-center">
                 <div className="w-full max-w-md space-y-6">
 
@@ -82,13 +79,11 @@ const SignUpPage = () => {
                     {/* Sign Up Form */}
                     <form onSubmit={handleSubmit} className="space-y-6 py-4">
 
-                        {/* Full Name Field: SVG ICON FIXED */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-medium">Full Name</span>
                             </label>
                             <div className="relative">
-                                {/* SVG ICON WRAPPER: ADDED inset-y-0 */}
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <UserSvg className="size-5 text-base-content/40 z-50" />
                                 </div>
@@ -102,13 +97,12 @@ const SignUpPage = () => {
                             </div>
                         </div>
 
-                        {/* Email Field: SVG ICON FIXED */}
+                        {/* Email Field */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-medium">Email</span>
                             </label>
                             <div className="relative">
-                                {/* SVG ICON WRAPPER: ADDED inset-y-0 */}
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <MailSvg className="size-5 text-base-content/40 z-50" />
                                 </div>
@@ -122,7 +116,7 @@ const SignUpPage = () => {
                             </div>
                         </div>
 
-                        {/* Password Field: SVG ICON FIXED */}
+                        {/* Password Field */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-medium">Password</span>
@@ -180,7 +174,7 @@ const SignUpPage = () => {
 
             {/* 2. Right Content: AuthImagePattern Component */}
             <AuthImagePattern
-                title="Join our community"
+                title="Chat on Cipher"
                 subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
             />
 

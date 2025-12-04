@@ -1,15 +1,16 @@
-import Navbar from "./components/Navbar"
-import HomePage from "./pages/HomePage"
-import SignUpPage from "./pages/SignUpPage"
-import LoginPage from "./pages/LoginPage"
-import SettingPage from "./pages/SettingPage"
-import ProfilePage from "./pages/ProfilePage"
+import Navbar from "./components/Navbar";
+import HomePage from "./pages/HomePage";
+import SignUpPage from "./pages/SignUpPage";
+import LoginPage from "./pages/LoginPage";
+import SettingPage from "./pages/SettingPage";
+import ProfilePage from "./pages/ProfilePage";
 
-import { Navigate, Route, Routes } from "react-router-dom"
-import { useAuth } from "./authentication/useAuth"
-import { useEffect } from "react"
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useAuth } from "./authentication/useAuth";
+import { useEffect } from "react";
 
-import { Loader } from "lucide-react"
+import { Loader } from "lucide-react";
+import { Toaster } from "react-hot-toast";
 
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuth();
@@ -19,7 +20,7 @@ const App = () => {
   }, [checkAuth])
 
   console.log({ authUser });
-  if (!isCheckingAuth && !authUser) return (
+  if (isCheckingAuth) return (
     <div className="flex items-center justify-center h-screen">
       <Loader className="size-10 animate-spin" />
     </div>
@@ -36,6 +37,9 @@ const App = () => {
         <Route path="/settings" element={<SettingPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
       </Routes>
+
+      <Toaster />
+
     </section>
   )
 }
