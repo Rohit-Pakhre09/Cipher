@@ -5,6 +5,9 @@ import { Link } from "react-router-dom";
 
 import AuthImagePattern from "../components/AuthImagePattern";
 import toast from "react-hot-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 
 const UserSvg = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -28,31 +31,27 @@ const LockSvg = (props) => (
 );
 
 
+const signupSchema = z.object({
+    fullName: z.string().min(1, "Full name is required"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
 const SignUpPage = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        fullName: "",
-        email: "",
-        password: ""
-    });
 
     const { signup, isSigningUp } = useAuth();
 
-    const validateForm = () => {
-        if (!formData.fullName.trim()) return toast.error("Full name is required");
-        if (!formData.email.trim()) return toast.error("Email is required");
-        if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
-        if (!formData.password) return toast.error("Password is required");
-        if (formData.password.length < 6) return toast.error("Password must be at least 6 characters");
-        return true;
-    };
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm({
+        resolver: zodResolver(signupSchema),
+    });
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-
-        const success = validateForm();
-
-        if (success === true) signup(formData);
+    const onSubmit = (data) => {
+        signup(data);
     };
 
     return (
@@ -77,7 +76,7 @@ const SignUpPage = () => {
                     </div>
 
                     {/* Sign Up Form */}
-                    <form onSubmit={handleSubmit} className="space-y-6 py-4">
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
 
                         <div className="form-control">
                             <label className="label">
@@ -89,12 +88,12 @@ const SignUpPage = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    className={`input input-bordered w-full pl-10`}
+                                    className={`input input-bordered w-full pl-10 ${errors.fullName ? "input-error" : ""}`}
                                     placeholder="John Doe"
-                                    value={formData.fullName}
-                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                                    {...register("fullName")}
                                 />
                             </div>
+                            {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>}
                         </div>
 
                         {/* Email Field */}
@@ -108,12 +107,12 @@ const SignUpPage = () => {
                                 </div>
                                 <input
                                     type="email"
-                                    className={`input input-bordered w-full pl-10`}
+                                    className={`input input-bordered w-full pl-10 ${errors.email ? "input-error" : ""}`}
                                     placeholder="you@example.com"
-                                    value={formData.email}
-                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    {...register("email")}
                                 />
                             </div>
+                            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                         </div>
 
                         {/* Password Field */}
@@ -128,10 +127,9 @@ const SignUpPage = () => {
                                 </div>
                                 <input
                                     type={showPassword ? "text" : "password"}
-                                    className={`input input-bordered w-full pl-10`}
+                                    className={`input input-bordered w-full pl-10 ${errors.password ? "input-error" : ""}`}
                                     placeholder="••••••••"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    {...register("password")}
                                 />
                                 <button
                                     type="button"
@@ -145,6 +143,7 @@ const SignUpPage = () => {
                                     )}
                                 </button>
                             </div>
+                            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                         </div>
 
                         {/* Submit Button */}

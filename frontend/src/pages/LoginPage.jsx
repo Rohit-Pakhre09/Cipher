@@ -3,18 +3,29 @@ import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
 import { useAuth } from "../authentication/useAuth";
 import AuthImagePattern from "../components/AuthImagePattern";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
   const { login, isLoggingIn } = useAuth();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    login(formData);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const onSubmit = (data) => {
+    login(data);
   };
 
   return (
@@ -37,7 +48,7 @@ const LoginPage = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div className="form-control">
               <label className="label">
                 <span className="label-text font-medium">Email</span>
@@ -48,12 +59,12 @@ const LoginPage = () => {
                 </div>
                 <input
                   type="email"
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10 ${errors.email ? "input-error" : ""}`}
                   placeholder="you@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  {...register("email")}
                 />
               </div>
+              {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
             </div>
 
             <div className="form-control">
@@ -66,10 +77,9 @@ const LoginPage = () => {
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
-                  className={`input input-bordered w-full pl-10`}
+                  className={`input input-bordered w-full pl-10 ${errors.password ? "input-error" : ""}`}
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  {...register("password")}
                 />
                 <button
                   type="button"
@@ -83,6 +93,7 @@ const LoginPage = () => {
                   )}
                 </button>
               </div>
+              {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
             </div>
 
             <button type="submit" className="btn btn-primary w-full" disabled={isLoggingIn}>
