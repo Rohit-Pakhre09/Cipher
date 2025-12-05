@@ -57,4 +57,19 @@ export const useAuth = create((set) => ({
             toast.error(error.response.data.message);
         }
     },
+
+    updateProfile: async (data) => {
+        set({ isUpdatingProfile: true });
+
+        try {
+            const res = await API.put("/auth/update-profile", data);
+            set({ authUser: res.data });
+            toast.success("Profile upload successfully");
+        } catch (error) {
+            console.log("Error in updating profile: ", error);
+            toast.error(error.response.data.message);
+        } finally {
+            set({ isUpdatingProfile: false })
+        }
+    },
 }));
