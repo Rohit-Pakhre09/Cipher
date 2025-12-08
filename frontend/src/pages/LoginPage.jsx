@@ -61,6 +61,7 @@ const LoginPage = () => {
                   type="email"
                   className={`input input-bordered w-full pl-10 ${errors.email ? "input-error" : ""}`}
                   placeholder="you@example.com"
+                  autoComplete="username"
                   {...register("email")}
                 />
               </div>
@@ -79,6 +80,7 @@ const LoginPage = () => {
                   type={showPassword ? "text" : "password"}
                   className={`input input-bordered w-full pl-10 ${errors.password ? "input-error" : ""}`}
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   {...register("password")}
                 />
                 <button

@@ -22,12 +22,12 @@ const ProfilePage = () => {
   };
 
   return (
-    <section className="h-screen pt-20">
+    <section className="min-h-screen pt-20">
       <div className="max-w-2xl mx-auto p-4 py-8">
-        <div className="bg-base-300 rounded-xl p-6 space-y-8">
+        <div className="bg-base-300 rounded-xl p-4 md:p-6 space-y-6 md:space-y-8">
           <div className="text-center">
-            <h1 className="text-2xl font-semibold ">Profile</h1>
-            <p className="mt-2">Your profile information</p>
+            <h1 className="text-xl md:text-2xl font-semibold ">Profile</h1>
+            <p className="mt-2 text-sm md:text-base">Your profile information</p>
           </div>
 
           {/* Avatar upload section */}
@@ -36,7 +36,7 @@ const ProfilePage = () => {
               <img
                 src={selectedImg || authUser.profilePic || "/avatar.png"}
                 alt="Profile"
-                className="size-32 rounded-full object-cover border-4 "
+                className="size-24 md:size-32 rounded-full object-cover border-4 "
               />
               <label
                 htmlFor="avatar-upload"

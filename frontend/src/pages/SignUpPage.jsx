@@ -52,7 +52,6 @@ const SignUpPage = () => {
 
     const onSubmit = (data) => {
         signup(data);
-        toast.success("Account created successfully");
     };
 
     return (

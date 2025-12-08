@@ -30,7 +30,7 @@ export const useAuth = create((set) => ({
             set({ authUser: res.data });
             toast.success("Account created successfully")
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || error.message);
         } finally {
             set({ isSigningUp: false });
         }
@@ -43,7 +43,7 @@ export const useAuth = create((set) => ({
             set({ authUser: res.data });
             toast.success("Logged in successfully");
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || error.message);
         } finally {
             set({ isLoggingIn: false });
         }
@@ -55,7 +55,7 @@ export const useAuth = create((set) => ({
             set({ authUser: null });
             toast.success("Logged out successfully");
         } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.message);
         }
     },
 
@@ -68,7 +68,7 @@ export const useAuth = create((set) => ({
             toast.success("Profile upload successfully");
         } catch (error) {
             console.log("Error in updating profile: ", error);
-            toast.error(error.response.data.message);
+            toast.error(error.message);
         } finally {
             set({ isUpdatingProfile: false })
         }
