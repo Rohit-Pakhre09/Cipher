@@ -1,5 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { generateToken } from "../utils/utils.js";
 import cloudinary from "../lib/cloudinary.js";
 
@@ -30,7 +31,8 @@ export const signup = async (req, res) => {
 
         if (newUser) {
             // generate jwt token here
-            generateToken(newUser._id, res);
+            const { accessToken, refreshToken } = generateToken(newUser._id, res);
+            newUser.refreshToken = refreshToken;
             await newUser.save();
 
             res.status(201).json({
@@ -64,7 +66,8 @@ export const login = async (req, res) => {
             return res.status(400).json({ message: "Invalid Credentials" });
         }
 
-        generateToken(user._id, res);
+        const { accessToken, refreshToken } = generateToken(user._id, res);
+        await User.findByIdAndUpdate(user._id, { refreshToken });
 
         res.status(200).json({
             _id: user._id,
@@ -79,8 +82,10 @@ export const login = async (req, res) => {
 };
 
 // Logout
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
     try {
+        const userId = req.user._id;
+        await User.findByIdAndUpdate(userId, { refreshToken: null });
         res.cookie("jwt", "", { maxAge: 0 });
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
@@ -106,6 +111,34 @@ export const updateProfile = async (req, res) => {
     } catch (error) {
         console.log("There is some server error: ", error.message);
         res.status(500).json({ message: "There is some server error" });
+    }
+};
+
+// Refresh Token
+export const refreshToken = async (req, res) => {
+    try {
+        const { refreshToken } = req.body;
+        if (!refreshToken) {
+            return res.status(401).json({ message: "Refresh token required" });
+        }
+
+        const user = await User.findOne({ refreshToken });
+        if (!user) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+        if (decoded.userId !== user._id.toString()) {
+            return res.status(403).json({ message: "Invalid refresh token" });
+        }
+
+        const { accessToken, refreshToken: newRefreshToken } = generateToken(user._id, res);
+        await User.findByIdAndUpdate(user._id, { refreshToken: newRefreshToken });
+
+        res.status(200).json({ message: "Token refreshed successfully" });
+    } catch (error) {
+        console.log("Error in refreshToken controller", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
