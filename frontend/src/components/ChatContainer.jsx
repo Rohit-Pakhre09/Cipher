@@ -1,4 +1,31 @@
+import { useEffect, useRef } from "react";
+import { useChat } from "../hooks/useChat";
+import ChatHeader from "./ChatHeader";
+import MessageInput from "./MessageInput";
+import MessageSkeleton from "./common/MessageSkeleton";
+import { useAuth } from "../authentication/useAuth";
+import { formatMessageTime } from "../lib/utils";
+
 const ChatContainer = () => {
+    const { messages, getMessages, isMessagesLoading, selectedUser } = useChat();
+    const { authUser } = useAuth();
+    const messageEndRef = useRef(null);
+
+    useEffect(() => {
+        getMessages(selectedUser._id)
+    }, [selectedUser._id, getMessages])
+
+
+    if (isMessagesLoading) {
+        return (
+            <div className="flex-1 flex flex-col overflow-auto">
+                <ChatHeader />
+                <MessageSkeleton />
+                <MessageInput />
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 flex flex-col overflow-auto">
             <ChatHeader />
@@ -10,7 +37,7 @@ const ChatContainer = () => {
                         className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
                         ref={messageEndRef}
                     >
-                        <div className=" chat-image avatar">
+                        <div className="chat-image avatar">
                             <div className="size-10 rounded-full border">
                                 <img
                                     src={
