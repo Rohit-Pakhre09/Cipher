@@ -3,11 +3,13 @@ import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js"
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import { app } from "./lib/socket.js";
 
-export const app = express();
+// export const app = express();
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(cors(
     {

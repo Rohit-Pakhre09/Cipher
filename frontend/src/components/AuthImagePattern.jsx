@@ -4,67 +4,57 @@ const AuthImagePattern = ({ title, subtitle }) => {
     const dynamicIcons = [Cpu, Code, Aperture, Wifi, Link, Hash];
 
     const gridStyles = [
-        "bg-primary/15",
-        "bg-white/10 backdrop-blur-sm",
+        "bg-primary/10",
         "bg-secondary/10",
+        "bg-accent/10",
     ];
 
     return (
-        <div
-            className="hidden lg:flex items-center justify-center p-16 relative overflow-hidden text-base-content"
-            style={{
-                background: "radial-gradient(circle at center, var(--fallback-bc,oklch(var(--bc))) 0%, var(--fallback-b3,oklch(var(--b3))) 100%)",
-            }}
-        >
+        <div className="hidden lg:flex items-center justify-center p-16 relative overflow-hidden bg-base-200 text-base-content transition-colors duration-500">
+
             <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="size-4 rounded-full bg-primary absolute top-[10%] left-[20%] animate-ping-slow"></div>
-                <div className="size-6 rounded-full bg-secondary absolute bottom-[15%] right-[25%] animate-pulse-slow"></div>
-                <div className="size-8 rounded-full bg-accent absolute top-[40%] right-[10%] animate-spin-slow"></div>
+                <div className="size-32 rounded-full bg-primary/20 blur-3xl absolute -top-10 -left-10 animate-pulse"></div>
+                <div className="size-32 rounded-full bg-secondary/20 blur-3xl absolute -bottom-10 -right-10 animate-pulse"></div>
             </div>
 
-            <div className="max-w-md text-center backdrop-blur-md bg-white/5 border border-white/10 rounded-3xl p-10 shadow-3xl relative z-10 transition-all duration-500 hover:shadow-4xl">
+            <div className="max-w-md text-center backdrop-blur-sm bg-base-100/50 border border-base-content/10 rounded-3xl p-10 shadow-2xl relative z-10">
 
-                <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="grid grid-cols-3 gap-3 mb-8">
                     {[...Array(9)].map((_, i) => {
                         const styleClass = gridStyles[i % gridStyles.length];
-
-                        const IconComponent = (i !== 4 && i % 3 === 0)
-                            ? dynamicIcons[Math.floor(Math.random() * dynamicIcons.length)]
+                        const IconComponent = (i !== 4 && i % 2 === 0)
+                            ? dynamicIcons[i % dynamicIcons.length]
                             : null;
 
                         return (
                             <div
                                 key={i}
-                                className={`aspect-square rounded-xl flex items-center justify-center relative 
-                                            ${styleClass} transition-all duration-300 ease-out text-white/50
-                                            ${i % 2 === 0 ? "hover:rotate-3" : "hover:-translate-y-0.5"}
-                                            ${i === 4 ? "shadow-lg shadow-primary/40 scale-110 border-2 border-primary/50" : ""}
+                                className={`aspect-square rounded-2xl flex items-center justify-center relative 
+                                            ${styleClass} transition-all duration-500
+                                            ${i === 4 ? "scale-110 shadow-lg shadow-primary/20 border-2 border-primary" : "border border-base-content/5"}
                                 `}
                             >
                                 {i === 4 ? (
-                                    <Zap className="size-8 text-primary animate-pulse" />
+                                    <Zap className="size-8 text-primary animate-bounce" />
                                 ) : IconComponent ? (
-                                    <IconComponent className="size-5 text-secondary/80 opacity-70" />
+                                    <IconComponent className="size-6 text-accent opacity-60" />
                                 ) : (
-                                    <span className="text-xs font-mono opacity-50">ID-{(i + 1).toString().padStart(2, '0')}</span>
+                                    <div className="size-2 rounded-full bg-base-content/20"></div>
                                 )}
-
                             </div>
                         );
                     })}
                 </div>
 
                 <div className="flex flex-col items-center">
-                    <Zap className="size-8 text-primary mb-4 animate-flash-subtle" />
+                    <h2 className="text-3xl font-bold mb-3 text-base-content">{title}</h2>
 
-                    <h2 className="text-4xl font-black mb-3 text-white leading-tight tracking-wide">{title}</h2>
-
-                    <div className="text-sm font-mono text-primary flex items-center mb-6">
-                        <CornerDownRight className="size-4 mr-1" />
-                        A modern perspective
+                    <div className="flex items-center gap-2 text-primary font-mono text-sm mb-4">
+                        <CornerDownRight className="size-4" />
+                        <span>Theme-Sync Active</span>
                     </div>
 
-                    <p className="text-lg text-white/70">{subtitle}</p>
+                    <p className="text-base-content/60">{subtitle}</p>
                 </div>
 
             </div>
