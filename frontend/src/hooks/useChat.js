@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { API } from "../lib/axios";
+import { useAuth } from "../authentication/useAuth";
 
 export const useChat = create((set, get) => ({
     messages: [],
@@ -39,9 +40,32 @@ export const useChat = create((set, get) => ({
 
         try {
             const res = await API.post(`/messages/send/${selectedUser._id}`, messageData);
-            set({ messages: [...messages, res.data] })
+            set({ messages: [...messages, res.data.newMessage] });
         } catch (error) {
             toast.error(error.response.data.message);
+        }
+    },
+
+    subcribeToMessages: () => {
+        const socket = useAuth.getState().socket;
+        if (!socket) return;
+
+        const handler = (newMessage) => {
+            const authUser = useAuth.getState().authUser;
+            if (String(newMessage.senderId) !== String(authUser._id)) {
+                const { messages } = get();
+                set({ messages: [...messages, newMessage] });
+            }
+        };
+
+        socket.on("newMessage", handler);
+        return handler;
+    },
+
+    unsubcribeToMessages: (handler) => {
+        const socket = useAuth.getState().socket;
+        if (socket && handler) {
+            socket.off("newMessage", handler);
         }
     },
 
