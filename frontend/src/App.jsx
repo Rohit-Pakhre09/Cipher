@@ -1,3 +1,4 @@
+import { useChat } from "./hooks/useChat";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import SignUpPage from "./pages/SignUpPage";
@@ -14,14 +15,19 @@ import { Toaster } from "react-hot-toast";
 import { useTheme } from "./hooks/useTheme"
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuth();
+  const { authUser, checkAuth, isCheckingAuth, socket } = useAuth();
+  const { initChatListeners } = useChat();
   const { theme } = useTheme();
-
-  console.log({ onlineUsers });
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth])
+
+  useEffect(() => {
+    if (socket) {
+      initChatListeners();
+    }
+  }, [socket, initChatListeners])
 
   if (isCheckingAuth && !authUser) return (
     <div className="flex items-center justify-center h-screen">

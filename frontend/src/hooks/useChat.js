@@ -46,29 +46,40 @@ export const useChat = create((set, get) => ({
         }
     },
 
-    subcribeToMessages: () => {
+    initChatListeners: () => {
         const socket = useAuth.getState().socket;
         if (!socket) return;
 
-        const handler = (newMessage) => {
-            const authUser = useAuth.getState().authUser;
+        socket.on("newMessage", (newMessage) => {
+            const { authUser } = useAuth.getState();
             if (String(newMessage.senderId) !== String(authUser._id)) {
                 const { messages } = get();
                 set({ messages: [...messages, newMessage] });
             }
-        };
+        });
 
-        socket.on("newMessage", handler);
-        return handler;
+        socket.on("messageStatusUpdated", (updatedMessage) => {
+            const { messages } = get();
+            const updatedMessages = messages.map(msg => 
+                msg._id === updatedMessage._id ? updatedMessage : msg
+            );
+            set({ messages: updatedMessages });
+        });
+
+        socket.on("messagesRead", ({ readerId }) => {
+            const { messages, selectedUser } = get();
+            const authUser = useAuth.getState().authUser;
+            if (selectedUser && String(readerId) === String(selectedUser._id)) {
+                const updatedMessages = messages.map(msg => {
+                    if (msg.senderId === authUser._id) {
+                        return { ...msg, status: 'read' };
+                    }
+                    return msg;
+                });
+                set({ messages: updatedMessages });
+            }
+        });
     },
 
-    unsubcribeToMessages: (handler) => {
-        const socket = useAuth.getState().socket;
-        if (socket && handler) {
-            socket.off("newMessage", handler);
-        }
-    },
-
-    // todo: optimize this one later
     setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));

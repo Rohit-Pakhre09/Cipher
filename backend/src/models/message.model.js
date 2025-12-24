@@ -18,6 +18,11 @@ export const messageSchema = new Schema(
         image: {
             type: String
         },
+        status: {
+            type: String,
+            enum: ['sent', 'delivered', 'read'],
+            default: 'sent'
+        }
     },
     { timestamps: true }
 );
