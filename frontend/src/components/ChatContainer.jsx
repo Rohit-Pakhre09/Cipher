@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useChat } from "../hooks/useChat";
 
 import ChatHeader from "./ChatHeader";
@@ -8,20 +8,13 @@ import MessageStatus from "./common/MessageStatus";
 
 import { useAuth } from "../authentication/useAuth";
 import { formatMessageTime, isSameDay } from "../lib/utils.js";
+import TypingIndicator from "./common/TypingIndicator.jsx";
 
 const ChatContainer = () => {
-    const { messages, getMessages, isMessagesLoading, selectedUser } = useChat();
-    const { authUser } = useAuth();
+    const { messages, isMessagesLoading, selectedUser } = useChat();
+    const { authUser, socket } = useAuth();
     const messageEndRef = useRef(null);
-
-    useEffect(() => {
-        getMessages(selectedUser._id);
-        const socket = useAuth.getState().socket;
-        
-        if (socket) {
-            socket.emit("markAsRead", { myId: authUser._id, userToChatId: selectedUser._id });
-        }
-    }, [selectedUser._id, getMessages, authUser._id])
+    const [isTyping, setIsTyping] = useState(false);
 
     useEffect(() => {
         if (messageEndRef.current && messages) {
@@ -29,7 +22,25 @@ const ChatContainer = () => {
                 behavior: "smooth"
             })
         }
-    }, [messages])
+    }, [messages]);
+
+    useEffect(() => {
+        if (!socket) return;
+        socket.on("typing", (data) => {
+            if (data.senderId === selectedUser?._id) {
+                setIsTyping(true);
+            }
+        });
+
+        socket.on("stopTyping", () => {
+            setIsTyping(false);
+        });
+
+        return () => {
+            socket.off("typing");
+            socket.off("stopTyping");
+        }
+    }, [socket, selectedUser]);
 
 
     if (isMessagesLoading) {
@@ -110,6 +121,7 @@ const ChatContainer = () => {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {renderMessages()}
+                {isTyping && <TypingIndicator />}
             </div>
 
             <MessageInput />

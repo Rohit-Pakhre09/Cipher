@@ -53,14 +53,21 @@ export const useChat = create((set, get) => ({
         socket.on("newMessage", (newMessage) => {
             const { authUser } = useAuth.getState();
             if (String(newMessage.senderId) !== String(authUser._id)) {
-                const { messages } = get();
+                const { messages, selectedUser } = get();
                 set({ messages: [...messages, newMessage] });
+
+                if (selectedUser && String(newMessage.senderId) === String(selectedUser._id)) {
+                    socket.emit("markAsRead", {
+                        myId: authUser._id,
+                        userToChatId: selectedUser._id,
+                    });
+                }
             }
         });
 
         socket.on("messageStatusUpdated", (updatedMessage) => {
             const { messages } = get();
-            const updatedMessages = messages.map(msg => 
+            const updatedMessages = messages.map(msg =>
                 msg._id === updatedMessage._id ? updatedMessage : msg
             );
             set({ messages: updatedMessages });
@@ -81,5 +88,15 @@ export const useChat = create((set, get) => ({
         });
     },
 
-    setSelectedUser: (selectedUser) => set({ selectedUser }),
+    setSelectedUser: (selectedUser) => {
+        set({ selectedUser });
+        if (selectedUser) {
+            const { authUser, socket } = useAuth.getState();
+            get().getMessages(selectedUser._id);
+            socket.emit("markAsRead", {
+                myId: authUser._id,
+                userToChatId: selectedUser._id,
+            });
+        }
+    },
 }));

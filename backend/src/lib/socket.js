@@ -70,6 +70,20 @@ io.on("connection", (socket) => {
         }
     });
 
+    socket.on("typing", (data) => {
+        const receiverSocketId = userSocketMap[data.receiverId];
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("typing", data);
+        }
+    });
+
+    socket.on("stopTyping", (data) => {
+        const receiverSocketId = userSocketMap[data.receiverId];
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("stopTyping", data);
+        }
+    });
+
     socket.on("disconnect", () => {
         if (socket.userId) { 
             delete userSocketMap[socket.userId];
