@@ -1,11 +1,13 @@
 import express from "express";
-import { checkAuth, login, logout, refreshToken, signup, updateProfile } from "../controllers/auth.controller.js";
+import { checkAuth, login, logout, refreshToken, signup, updateProfile, forgotPassword, resetPassword } from "../controllers/auth.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
 router.post("/signup", signup)
 router.post("/login", login)
+router.post("/forgot-password", forgotPassword)
+router.post("/reset-password/:token", resetPassword)
 router.post("/logout", protectRoute, logout)
 router.post("/refresh", refreshToken)
 

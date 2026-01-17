@@ -57,13 +57,10 @@ io.on("connection", (socket) => {
                 { $set: { status: 'read' } }
             );
 
+            // Notify the other user that their messages have been read
             const senderSocketId = userSocketMap[userToChatId];
             if (senderSocketId) {
                 io.to(senderSocketId).emit("messagesRead", { readerId: myId });
-            }
-            const receiverSocketId = userSocketMap[myId];
-            if (receiverSocketId) {
-                io.to(receiverSocketId).emit("messagesRead", { readerId: myId });
             }
         } catch (error) {
             console.log("Error in markAsRead: ", error);

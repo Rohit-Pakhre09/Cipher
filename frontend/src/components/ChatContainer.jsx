@@ -14,6 +14,7 @@ const ChatContainer = () => {
     const { messages, isMessagesLoading, selectedUser } = useChat();
     const { authUser, socket } = useAuth();
     const messageEndRef = useRef(null);
+    const typingIndicatorRef = useRef(null);
     const [isTyping, setIsTyping] = useState(false);
 
     useEffect(() => {
@@ -25,22 +26,33 @@ const ChatContainer = () => {
     }, [messages]);
 
     useEffect(() => {
+        if (isTyping && typingIndicatorRef.current) {
+            typingIndicatorRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [isTyping]);
+
+    useEffect(() => {
         if (!socket) return;
-        socket.on("typing", (data) => {
-            if (data.senderId === selectedUser?._id) {
+
+        const handleTypingEvent = (data) => {
+            const { selectedUser: currentSelectedUser } = useChat.getState();
+            if (data.senderId === currentSelectedUser?._id) {
                 setIsTyping(true);
             }
-        });
+        };
 
-        socket.on("stopTyping", () => {
+        const handleStopTypingEvent = () => {
             setIsTyping(false);
-        });
+        };
+
+        socket.on("typing", handleTypingEvent);
+        socket.on("stopTyping", handleStopTypingEvent);
 
         return () => {
-            socket.off("typing");
-            socket.off("stopTyping");
+            socket.off("typing", handleTypingEvent);
+            socket.off("stopTyping", handleStopTypingEvent);
         }
-    }, [socket, selectedUser]);
+    }, [socket]);
 
 
     if (isMessagesLoading) {
@@ -121,7 +133,9 @@ const ChatContainer = () => {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {renderMessages()}
-                {isTyping && <TypingIndicator />}
+                <div ref={typingIndicatorRef}>
+                    {isTyping && <TypingIndicator />}
+                </div>
             </div>
 
             <MessageInput />

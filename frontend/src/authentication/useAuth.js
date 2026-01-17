@@ -59,6 +59,28 @@ export const useAuth = create((set, get) => ({
         }
     },
 
+    forgotPassword: async (email) => {
+        try {
+            const res = await API.post("/auth/forgot-password", { email });
+            toast.success(res.data.message || "Reset link sent");
+            return res.data;
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+            throw error;
+        }
+    },
+
+    resetPassword: async (token, password) => {
+        try {
+            const res = await API.post(`/auth/reset-password/${token}`, { password });
+            toast.success(res.data.message || "Password reset successful");
+            return true;
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
+            throw error;
+        }
+    },
+
     logout: async () => {
         try {
             await API.post("/auth/logout");

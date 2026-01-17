@@ -11,9 +11,15 @@ const HomePage = () => {
       <div className="flex items-center justify-center pt-20 px-2 md:px-4">
         <div className="bg-base-100 rounded-lg shadow-cl w-full max-w-6xl h-[calc(100vh-8rem)] md:h-[calc(100vh-8rem)]">
           <div className="flex h-full rounded-lg overflow-hidden">
-            <Sidebar />
+            {/* Sidebar - visible on mobile only when no chat is selected */}
+            <div className={`${selectedUser ? 'hidden' : 'block'} md:block`}>
+              <Sidebar />
+            </div>
 
-            {!selectedUser ? <NoChatSelected /> : <ChatContainer />}
+            {/* Chat Area - visible on mobile only when a chat IS selected */}
+            <div className={`flex-1 ${selectedUser ? 'flex' : 'hidden'} md:flex`}>
+              {selectedUser ? <ChatContainer /> : <NoChatSelected />}
+            </div>
           </div>
         </div>
       </div>
@@ -21,4 +27,4 @@ const HomePage = () => {
   )
 }
 
-export default HomePage
+export default HomePage;

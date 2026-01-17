@@ -12,7 +12,6 @@ export const useChat = create((set, get) => ({
 
     getUsers: async () => {
         set({ isUsersLoading: true });
-
         try {
             const res = await API.get("/messages/users");
             set({ users: res.data });
@@ -27,7 +26,20 @@ export const useChat = create((set, get) => ({
         set({ isMessagesLoading: true });
         try {
             const res = await API.get(`/messages/${userId}`);
-            set({ messages: res.data });
+            const messages = res.data;
+            set({ messages });
+
+            const { authUser, socket } = useAuth.getState();
+            if (socket) {
+                messages.forEach(message => {
+                    if (message.status === 'sent' && String(message.receiverId) === String(authUser._id)) {
+                        socket.emit("messageDelivered", {
+                            messageId: message._id,
+                            receiverId: authUser._id
+                        });
+                    }
+                });
+            }
         } catch (error) {
             toast.error(error.response.data.message);
         } finally {
@@ -37,7 +49,6 @@ export const useChat = create((set, get) => ({
 
     sendMessage: async (messageData) => {
         const { selectedUser, messages } = get();
-
         try {
             const res = await API.post(`/messages/send/${selectedUser._id}`, messageData);
             set({ messages: [...messages, res.data.newMessage] });
@@ -52,16 +63,24 @@ export const useChat = create((set, get) => ({
 
         socket.on("newMessage", (newMessage) => {
             const { authUser } = useAuth.getState();
-            if (String(newMessage.senderId) !== String(authUser._id)) {
-                const { messages, selectedUser } = get();
+
+            // Acknowledge delivery as soon as the client receives the message
+            socket.emit("messageDelivered", {
+                messageId: newMessage._id,
+                receiverId: authUser._id,
+            });
+
+            const { messages, selectedUser } = get();
+            
+            // Only add the message to the UI if it belongs to the currently open chat
+            if (selectedUser && String(newMessage.senderId) === String(selectedUser._id)) {
                 set({ messages: [...messages, newMessage] });
 
-                if (selectedUser && String(newMessage.senderId) === String(selectedUser._id)) {
-                    socket.emit("markAsRead", {
-                        myId: authUser._id,
-                        userToChatId: selectedUser._id,
-                    });
-                }
+                // Since the chat is open and the message is displayed, mark it as read
+                socket.emit("markAsRead", {
+                    myId: authUser._id,
+                    userToChatId: selectedUser._id,
+                });
             }
         });
 
@@ -78,7 +97,12 @@ export const useChat = create((set, get) => ({
             const authUser = useAuth.getState().authUser;
             if (selectedUser && String(readerId) === String(selectedUser._id)) {
                 const updatedMessages = messages.map(msg => {
-                    if (msg.senderId === authUser._id) {
+                    // Explicitly check that the message was sent by me TO the reader
+                    if (
+                        msg.senderId === authUser._id &&
+                        String(msg.receiverId) === String(readerId) &&
+                        msg.status !== 'read'
+                    ) {
                         return { ...msg, status: 'read' };
                     }
                     return msg;
