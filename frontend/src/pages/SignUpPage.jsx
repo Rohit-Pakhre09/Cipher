@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useAuth } from "../authentication/useAuth";
+import { useDispatch, useSelector } from "react-redux";
+import { signup } from "../store/authSlice";
 import { Eye, EyeOff, Loader2, MessageSquare } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -7,7 +8,6 @@ import AuthImagePattern from "../components/AuthImagePattern";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import toast from "react-hot-toast";
 
 const UserSvg = (props) => (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -39,8 +39,8 @@ const signupSchema = z.object({
 
 const SignUpPage = () => {
     const [showPassword, setShowPassword] = useState(false);
-
-    const { signup, isSigningUp } = useAuth();
+    const dispatch = useDispatch();
+    const { isSigningUp } = useSelector((state) => state.auth);
 
     const {
         register,
@@ -51,7 +51,7 @@ const SignUpPage = () => {
     });
 
     const onSubmit = (data) => {
-        signup(data);
+        dispatch(signup(data));
     };
 
     return (

@@ -2,7 +2,7 @@ import { Resend } from "resend";
 
 const FROM_EMAIL = process.env.FROM_EMAIL || `Cipher <no-reply@cipher.app>`;
 
-// Resend setup
+
 const resendClient = new Resend(process.env.RESEND_API_KEY);
 
 const generateResetPasswordHTML = ({ name = "", resetUrl, expiresIn = "1 hour" }) => {
@@ -17,7 +17,7 @@ const generateResetPasswordHTML = ({ name = "", resetUrl, expiresIn = "1 hour" }
       <title>Reset your password</title>
     </head>
     <body style="font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;padding:0;background:#f4f6fb;color:#1f2937;">
-      <span style="display:none!important;visibility:hidden;opacity:0;color:transparent;height:0;width:0;">${preheader}</span>
+    
       <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:40px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.08);">
         <tr>
           <td style="padding:24px;text-align:left;border-bottom:1px solid #eef2f7;">
@@ -55,7 +55,7 @@ const generateResetPasswordHTML = ({ name = "", resetUrl, expiresIn = "1 hour" }
 
 export const resend = async ({ to, subject, text, html }) => {
   return resendClient.emails.send({
-    from: 'Cipher <onboarding@resend.dev>',
+    from: FROM_EMAIL,
     to,
     subject,
     text,

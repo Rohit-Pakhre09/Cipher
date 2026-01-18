@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 
-export const messageSchema = new Schema(
+const messageSchema = new Schema(
     {
         senderId: {
             type: Schema.Types.ObjectId,
@@ -22,6 +22,13 @@ export const messageSchema = new Schema(
             type: String,
             enum: ['sent', 'delivered', 'read'],
             default: 'sent'
+        },
+        editedAt: {
+            type: Date
+        },
+        deleted: {
+            type: Boolean,
+            default: false
         }
     },
     { timestamps: true }

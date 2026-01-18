@@ -6,9 +6,9 @@ import cloudinary from "../lib/cloudinary.js";
 import { sendResetEmail } from "../lib/mailer.js";
 
 const passwordResetCooldowns = new Map();
-const COOLDOWN_PERIOD_MS = 5 * 60 * 1000; // 5 minutes
+const COOLDOWN_PERIOD_MS = 5 * 60 * 1000;
 
-// Sign up
+
 export const signup = async (req, res) => {
     const { fullName, email, password } = req.body;
     try {
@@ -34,7 +34,6 @@ export const signup = async (req, res) => {
         });
 
         if (newUser) {
-            // generate jwt token here
             const { accessToken, refreshToken } = generateToken(newUser._id, res);
             newUser.refreshToken = refreshToken;
             await newUser.save();
@@ -54,7 +53,7 @@ export const signup = async (req, res) => {
     }
 };
 
-// Login
+
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -85,7 +84,7 @@ export const login = async (req, res) => {
     }
 };
 
-// Logout
+
 export const logout = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -98,7 +97,7 @@ export const logout = async (req, res) => {
     }
 };
 
-// Update Profile Pic
+
 export const updateProfile = async (req, res) => {
     try {
         const { profilePic } = req.body;
@@ -118,25 +117,23 @@ export const updateProfile = async (req, res) => {
     }
 };
 
-// Forgot Password
+
 export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ message: "Email is required" });
 
-        // Cooldown check to prevent spamming
-        if (passwordResetCooldowns.has(email)) {
-            console.log(`Cooldown active for ${email}. Not sending another password reset email yet.`);
-            // Always send a generic success message to prevent email enumeration
+        const user = await User.findOne({ email });
+
+        
+        if (!user) {
             return res.status(200).json({ message: "Password reset email sent!" });
         }
 
-        const user = await User.findOne({ email });
-        if (!user) {
-            // WARNING: This response reveals that the email is not registered,
-            // which can be a security risk known as email enumeration.
-            // The previous behavior of sending a generic success message is more secure.
-            return res.status(404).json({ message: "Email not registered." });
+        
+        if (passwordResetCooldowns.has(email)) {
+            console.log(`Cooldown active for ${email}. Not sending another password reset email yet.`);
+            return res.status(200).json({ message: "Password reset email sent!" });
         }
 
         const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_RESET_SECRET || process.env.JWT_SECRET, { expiresIn: "1h" });
@@ -146,31 +143,35 @@ export const forgotPassword = async (req, res) => {
 
         const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
-        // Set cooldown before sending email to prevent race conditions
+        
         passwordResetCooldowns.set(email, true);
         setTimeout(() => {
             passwordResetCooldowns.delete(email);
         }, COOLDOWN_PERIOD_MS);
 
-        // Send a professional email containing the reset link
+        
         try {
-            const sendResult = await sendResetEmail(user.email, resetUrl, user.fullName);
-            console.log("Password reset email sent to", user.email);
-            console.log("Resend response:", sendResult);
+            if (!process.env.RESEND_API_KEY) {
+                console.log("RESEND_API_KEY not set. Skipping email send.");
+                
+            } else {
+                const sendResult = await sendResetEmail(user.email, resetUrl, user.fullName);
+                console.log("Password reset email sent to", user.email);
+                console.log("Resend response:", sendResult);
+            }
         } catch (err) {
             console.log("Failed to send reset email:", err);
-            // If email sending fails, we still respond with generic message to avoid leaking info
+            
         }
 
-        // Always respond with a generic message to avoid email enumeration
-        res.status(200).json({ message: "Password reset email sent!." });
+        res.status(200).json({ message: "Password reset email sent!" });
     } catch (error) {
         console.log("Error in forgotPassword controller", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
-// Reset Password
+
 export const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
@@ -193,7 +194,7 @@ export const resetPassword = async (req, res) => {
         user.password = hashedPassword;
         user.passwordResetToken = null;
         user.passwordResetExpires = null;
-        user.refreshToken = null; // invalidate existing sessions
+
         await user.save();
 
         res.status(200).json({ message: "Password reset successful" });
@@ -203,7 +204,7 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// Refresh Token
+
 export const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -231,7 +232,7 @@ export const refreshToken = async (req, res) => {
     }
 };
 
-// Check Auth
+
 export const checkAuth = (req, res) => {
     try {
         res.status(200).json(req.user);

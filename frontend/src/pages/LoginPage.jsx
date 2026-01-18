@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, MessageSquare } from "lucide-react";
-import { useAuth } from "../authentication/useAuth";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../store/authSlice";
 import AuthImagePattern from "../components/AuthImagePattern";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,7 +15,8 @@ const loginSchema = z.object({
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoggingIn } = useAuth();
+  const dispatch = useDispatch();
+  const { isLoggingIn } = useSelector((state) => state.auth);
 
   const {
     register,
@@ -25,7 +27,7 @@ const LoginPage = () => {
   });
 
   const onSubmit = (data) => {
-    login(data);
+    dispatch(login(data));
   };
 
   return (

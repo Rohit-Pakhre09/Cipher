@@ -8,7 +8,7 @@ export const server = http.createServer(app);
 
 export const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:5173"]
+        origin: [process.env.CORS_ORIGIN]
     }
 });
 
@@ -17,13 +17,13 @@ export function getReceiverSocketId(userId) {
 };
 
 const userSocketMap = {
-    
+
 };
 
 io.on("connection", (socket) => {
     const userId = socket.handshake.query.userId;
     if (userId) {
-        socket.userId = userId; 
+
         userSocketMap[userId] = socket.id;
     }
 
@@ -52,15 +52,20 @@ io.on("connection", (socket) => {
 
     socket.on("markAsRead", async ({ myId, userToChatId }) => {
         try {
-            await Message.updateMany(
-                { senderId: userToChatId, receiverId: myId, status: { $ne: 'read' } },
-                { $set: { status: 'read' } }
-            );
+            const messages = await Message.find({ senderId: userToChatId, receiverId: myId, status: { $ne: 'read' } });
+            for (const message of messages) {
+                message.status = 'read';
+                await message.save();
 
-            // Notify the other user that their messages have been read
-            const senderSocketId = userSocketMap[userToChatId];
-            if (senderSocketId) {
-                io.to(senderSocketId).emit("messagesRead", { readerId: myId });
+                const senderSocketId = userSocketMap[message.senderId];
+                if (senderSocketId) {
+                    io.to(senderSocketId).emit("messageStatusUpdated", message);
+                }
+
+                const receiverSocketId = userSocketMap[myId];
+                if (receiverSocketId) {
+                    io.to(receiverSocketId).emit("messageStatusUpdated", message);
+                }
             }
         } catch (error) {
             console.log("Error in markAsRead: ", error);
@@ -82,7 +87,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", () => {
-        if (socket.userId) { 
+        if (socket.userId) {
             delete userSocketMap[socket.userId];
             io.emit("getOnlineUsers", Object.keys(userSocketMap));
         }

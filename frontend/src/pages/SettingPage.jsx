@@ -1,6 +1,7 @@
 import { Send } from "lucide-react";
 import { THEMES } from "../../constants";
-import { useTheme } from "../hooks/useTheme";
+import { useSelector, useDispatch } from "react-redux";
+import { setTheme as setThemeAction } from "../store/themeSlice";
 
 const PREVIEW_MESSAGES = [
   { id: 1, content: "Hey! How's it going?", isSent: false },
@@ -8,7 +9,12 @@ const PREVIEW_MESSAGES = [
 ];
 
 const SettingPage = () => {
-  const { theme, setTheme } = useTheme();
+  const { theme } = useSelector((state) => state.theme);
+  const dispatch = useDispatch();
+
+  const setTheme = (newTheme) => {
+    dispatch(setThemeAction(newTheme));
+  };
 
   return (
     <section className="min-h-screen container mx-auto px-4 pt-20 max-w-5xl pb-8">

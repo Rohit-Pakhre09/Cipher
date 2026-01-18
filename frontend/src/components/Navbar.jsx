@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
-import { useAuth } from "../authentication/useAuth"
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/authSlice";
 import { LogOut, MessageSquare, Settings, User } from "lucide-react";
 
 const Navbar = () => {
-  const { logout, authUser } = useAuth()
+  const { authUser } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+  }
 
   return (
     <header
@@ -38,7 +44,7 @@ const Navbar = () => {
                   <span className="hidden sm:inline">Profile</span>
                 </Link>
 
-                <button className="flex gap-2 items-center cursor-pointer" onClick={logout}>
+                <button className="flex gap-2 items-center cursor-pointer" onClick={handleLogout}>
                   <LogOut className="size-5" />
                   <span className="hidden sm:inline">Logout</span>
                 </button>

@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "../authentication/useAuth";
+import { useDispatch } from "react-redux";
+import { resetPassword } from "../store/authSlice";
 import AuthImagePattern from "../components/AuthImagePattern";
 
 const schema = z
@@ -19,7 +20,7 @@ const schema = z
 const ResetPassword = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { resetPassword } = useAuth();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -33,7 +34,7 @@ const ResetPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-      await resetPassword(token, data.password);
+      await dispatch(resetPassword({ token, password: data.password })).unwrap();
       navigate("/login");
     } catch (error) {
       console.log(error);

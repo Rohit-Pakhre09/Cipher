@@ -4,7 +4,7 @@ import User from "../models/user.model.js";
 import cloudinary from "../lib/cloudinary.js"
 import { getReceiverSocketId, io } from "../lib/socket.js";
 
-// Sidebar Users
+
 export const getUsersForSidebar = async (req, res) => {
     try {
         const loggedInUserId = req.user._id;
@@ -17,7 +17,7 @@ export const getUsersForSidebar = async (req, res) => {
     }
 };
 
-// Get Messages
+
 export const getMessages = async (req, res) => {
     try {
         const { id: userToChatId } = req.params;
@@ -37,7 +37,7 @@ export const getMessages = async (req, res) => {
     }
 };
 
-// Send Message
+
 export const sendMessage = async (req, res) => {
     try {
         const { text, image } = req.body;
@@ -46,7 +46,7 @@ export const sendMessage = async (req, res) => {
 
         let imageUrl;
         if (image) {
-            // Upload base64 image to cloudinary
+
             const uploadResponse = await cloudinary.uploader.upload(image);
             imageUrl = uploadResponse.secure_url;
         }
@@ -60,7 +60,6 @@ export const sendMessage = async (req, res) => {
 
         await newMessage.save();
 
-        // todo: realtime functionlity goes here => socket.io
         const receiverSocketId = getReceiverSocketId(receiverId);
         if (receiverSocketId) {
             io.to(receiverSocketId).emit("newMessage", newMessage);
@@ -69,6 +68,75 @@ export const sendMessage = async (req, res) => {
         res.status(201).json({ newMessage });
     } catch (error) {
         console.log("Error in sendMessage controller: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
+export const editMessage = async (req, res) => {
+    try {
+        const { id: messageId } = req.params;
+        const { text } = req.body;
+        const userId = req.user._id;
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: "Message not found" });
+        }
+
+        if (message.senderId.toString() !== userId.toString()) {
+            return res.status(403).json({ error: "You can only edit your own messages" });
+        }
+
+        message.text = text;
+
+        const senderSocketId = getReceiverSocketId(message.senderId);
+        const receiverSocketId = getReceiverSocketId(message.receiverId);
+        if (senderSocketId) {
+            io.to(senderSocketId).emit("messageUpdated", message);
+        }
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("messageUpdated", message);
+        }
+
+        res.status(200).json({ message });
+    } catch (error) {
+        console.log("Error in editMessage controller: ", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
+export const deleteMessage = async (req, res) => {
+    try {
+        const { id: messageId } = req.params;
+        const userId = req.user._id;
+
+        const message = await Message.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ error: "Message not found" });
+        }
+
+        if (message.senderId.toString() !== userId.toString()) {
+            return res.status(403).json({ error: "You can only delete your own messages" });
+        }
+
+        message.deleted = true;
+        await message.save();
+
+
+        const senderSocketId = getReceiverSocketId(message.senderId);
+        const receiverSocketId = getReceiverSocketId(message.receiverId);
+        if (senderSocketId) {
+            io.to(senderSocketId).emit("messageDeleted", message);
+        }
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit("messageDeleted", message);
+        }
+
+        res.status(200).json({ message: "Message deleted successfully" });
+    } catch (error) {
+        console.log("Error in deleteMessage controller: ", error.message);
         res.status(500).json({ error: "Internal server error" });
     }
 };

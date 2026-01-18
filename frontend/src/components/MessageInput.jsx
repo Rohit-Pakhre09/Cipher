@@ -1,19 +1,21 @@
 import { useRef, useState } from "react";
-import { useChat } from "../hooks/useChat";
+import { useDispatch, useSelector } from "react-redux";
+import { sendMessage } from "../store/chatSlice";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
-import { useAuth } from "../authentication/useAuth";
 
-const MessageInput = () => { 
+const MessageInput = () => {
     const [text, setText] = useState("");
     const [imagePreview, setImagePreview] = useState(null);
     const fileInputRef = useRef(null);
-    const { sendMessage, selectedUser } = useChat();
-    const { socket, authUser } = useAuth();
+    const dispatch = useDispatch();
+    const { selectedUser } = useSelector((state) => state.chat);
+    const { socket, authUser } = useSelector((state) => state.auth);
     const typingTimeoutRef = useRef(null);
 
     const handleTyping = (e) => {
         setText(e.target.value);
+        if (!socket) return;
         socket.emit("typing", { receiverId: selectedUser._id, senderId: authUser._id });
 
         if (typingTimeoutRef.current) {
@@ -49,23 +51,24 @@ const MessageInput = () => {
         if (!text.trim() && !imagePreview) return;
 
         try {
-            await sendMessage({
+            await dispatch(sendMessage({
                 text: text.trim(),
                 image: imagePreview,
-            });
+            })).unwrap(); 
 
-            // Clear form
             setText("");
             setImagePreview(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            socket.emit("stopTyping", { receiverId: selectedUser._id });
+            if (socket) {
+                socket.emit("stopTyping", { receiverId: selectedUser._id });
+            }
         } catch (error) {
             console.error("Failed to send message:", error);
         }
     };
 
     return (
-        <div className="p-4 w-full">
+        <div className="p-4 w-full bg-base-100 border-t border-base-300">
             {imagePreview && (
                 <div className="mb-3 flex items-center gap-2">
                     <div className="relative">

@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useAuth } from "../authentication/useAuth";
+import { useDispatch } from "react-redux";
+import { forgotPassword } from "../store/authSlice";
 import AuthImagePattern from "../components/AuthImagePattern";
 
 const schema = z.object({
@@ -9,7 +10,7 @@ const schema = z.object({
 });
 
 const ForgotPassword = () => {
-  const { forgotPassword } = useAuth();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -19,10 +20,8 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data) => {
     try {
-      await forgotPassword(data.email);
+      await dispatch(forgotPassword(data.email)).unwrap();
     } catch (error) {
-      // The useAuth hook already shows a toast on error,
-      // so we just need to catch the promise rejection here.
       console.error(error);
     }
   };

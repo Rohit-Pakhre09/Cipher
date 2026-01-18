@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { useAuth } from "../authentication/useAuth"
+import { useDispatch, useSelector } from "react-redux";
+import { updateProfile } from "../store/authSlice";
 import { Camera, Mail, User } from "lucide-react";
 
 const ProfilePage = () => {
-  const { authUser, isUpdatingProfile, updateProfile } = useAuth();
+  const { authUser, isUpdatingProfile } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [selectedImg, setSelectedImg] = useState(null);
 
   const handleImageUpload = async (e) => {
@@ -17,7 +19,7 @@ const ProfilePage = () => {
     reader.onload = async () => {
       const base64Image = reader.result;
       setSelectedImg(base64Image);
-      await updateProfile({ profilePic: base64Image });
+      await dispatch(updateProfile({ profilePic: base64Image }));
     };
   };
 
