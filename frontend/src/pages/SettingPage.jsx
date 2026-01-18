@@ -17,7 +17,7 @@ const SettingPage = () => {
   };
 
   return (
-    <section className="min-h-screen container mx-auto px-4 pt-20 max-w-5xl pb-8">
+    <section className="h-[calc(100vh-4rem)] overflow-y-auto container mx-auto px-4 pt-5 max-w-5xl pb-4">
       <div className="space-y-6">
         <div className="flex flex-col gap-1">
           <h2 className="text-lg md:text-xl font-semibold">Theme</h2>
@@ -70,7 +70,7 @@ const SettingPage = () => {
                 </div>
 
                 {/* Chat Messages */}
-                <div className="p-4 space-y-4 min-h-[200px] max-h-[200px] overflow-y-auto bg-base-100">
+                <div className="p-4 space-y-4 min-h-[150px] max-h-[150px] overflow-y-auto bg-base-100">
                   {PREVIEW_MESSAGES.map((message) => (
                     <div
                       key={message.id}

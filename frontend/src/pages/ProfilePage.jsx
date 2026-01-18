@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateProfile } from "../store/authSlice";
-import { Camera, Mail, User } from "lucide-react";
+import { Camera, Mail, User, Edit2, Check, X } from "lucide-react";
 
 const ProfilePage = () => {
   const { authUser, isUpdatingProfile } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [selectedImg, setSelectedImg] = useState(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -23,8 +25,25 @@ const ProfilePage = () => {
     };
   };
 
+  const handleEditName = () => {
+    setEditedName(authUser?.fullName || "");
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (editedName.trim() && editedName !== authUser?.fullName) {
+      await dispatch(updateProfile({ fullName: editedName.trim() }));
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditedName("");
+    setIsEditingName(false);
+  };
+
   return (
-    <section className="min-h-screen pt-20">
+    <section className="h-[calc(100vh-4rem)] pt-5 overflow-y-auto">
       <div className="max-w-2xl mx-auto p-4 py-8">
         <div className="bg-base-300 rounded-xl p-4 md:p-6 space-y-6 md:space-y-8">
           <div className="text-center">
@@ -72,7 +91,40 @@ const ProfilePage = () => {
                 <User className="w-4 h-4" />
                 Full Name
               </div>
-              <p className="px-4 py-2.5 bg-base-200 rounded-lg border">{authUser?.fullName}</p>
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="flex-1 px-4 py-2.5 bg-base-200 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Enter your full name"
+                  />
+                  <button
+                    onClick={handleSaveName}
+                    className="btn btn-sm btn-primary"
+                    disabled={isUpdatingProfile}
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="btn btn-sm btn-ghost"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between px-4 py-2.5 bg-base-200 rounded-lg border">
+                  <span>{authUser?.fullName}</span>
+                  <button
+                    onClick={handleEditName}
+                    className="btn btn-sm btn-ghost btn-circle"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">

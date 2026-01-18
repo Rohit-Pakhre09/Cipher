@@ -55,7 +55,7 @@ const SignUpPage = () => {
     };
 
     return (
-        <section className="min-h-screen grid lg:grid-cols-2">
+        <section className="h-[calc(100vh)] overflow-y-auto grid lg:grid-cols-2">
 
             {/* 1. Left Content */}
             <div className="flex flex-col justify-center items-center">
