@@ -261,7 +261,7 @@ const useWebRTC = () => {
     }
   }, [isCalling, receiver, startCall]);
 
-  // Dedicated useEffect for incoming call listener
+  // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -275,12 +275,106 @@ const useWebRTC = () => {
       }));
     };
 
+    const handleCallAccepted = async (data) => {
+      console.log('Call accepted, setting remote description');
+      if (peerConnectionRef.current) {
+        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.signal));
+
+        // Process any buffered ICE candidates
+        while (iceCandidatesRef.current.length > 0) {
+          const candidate = iceCandidatesRef.current.shift();
+          try {
+            await peerConnectionRef.current.addIceCandidate(candidate);
+          } catch (error) {
+            console.error('Error adding buffered ICE candidate:', error);
+          }
+        }
+      }
+    };
+
+    const handleCallRejected = () => {
+      console.log('Call rejected');
+      dispatch(endCall());
+    };
+
+    const handleCallEnded = () => {
+      console.log('Call ended');
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((track) => track.stop());
+        localStreamRef.current = null;
+      }
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.srcObject = null;
+      }
+      dispatch(endCall());
+    };
+
+    const handleIceCandidate = async (data) => {
+      if (data.candidate) {
+        const candidate = new RTCIceCandidate(data.candidate);
+        if (peerConnectionRef.current && peerConnectionRef.current.remoteDescription) {
+          try {
+            await peerConnectionRef.current.addIceCandidate(candidate);
+          } catch (error) {
+            console.error('Error adding ICE candidate:', error);
+          }
+        } else {
+          // Buffer ICE candidates until remote description is set
+          iceCandidatesRef.current.push(candidate);
+        }
+      }
+    };
+
+    const handleConnect = () => {
+      console.log('Socket reconnected successfully');
+      // If a reconnection timeout was active, clear it as the socket reconnected
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
+      reconnectAttemptsRef.current = 0; // Reset attempts on successful reconnect
+      dispatch(stopReconnecting()); // Stop showing reconnecting status
+    };
+
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      // Only attempt to reconnect if a call is actually in progress
+      if (isCalling || isReceivingCall || isConnected) {
+        console.log('Call in progress and socket disconnected, attempting to reconnect...');
+        attemptReconnect();
+      } else {
+        console.log('Socket disconnected but no call in progress, not attempting to reconnect.');
+      }
+    };
+
     socket.on('call-user', handleIncomingCall);
+    socket.on('call-accepted', handleCallAccepted);
+    socket.on('call-rejected', handleCallRejected);
+    socket.on('call-ended', handleCallEnded);
+    socket.on('ice-candidate', handleIceCandidate);
+    socket.on('connect', handleConnect); // Add connect listener
+    socket.on('disconnect', handleDisconnect);
 
     return () => {
       socket.off('call-user', handleIncomingCall);
+      socket.off('call-accepted', handleCallAccepted);
+      socket.off('call-rejected', handleCallRejected);
+      socket.off('call-ended', handleCallEnded);
+      socket.off('ice-candidate', handleIceCandidate);
+      socket.off('connect', handleConnect); // Cleanup connect listener
+      socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, dispatch, authUser]); // Minimal dependencies for incoming call listener
+    // IMPORTANT: This useEffect has a comprehensive dependency array.
+    // If listener re-registration causes issues (e.g., missed events),
+    // consider using patterns like `use-event-callback` to stabilize memoized callbacks.
+  }, [socket, dispatch, handleEndCall, isCalling, isReceivingCall, isConnected, authUser?._id, attemptReconnect, peerConnectionRef, iceCandidatesRef, reconnectTimeoutRef, reconnectAttemptsRef, remoteAudioRef, localStreamRef]);
+
+
+  // Socket event listeners (for other events)
 
   // Socket event listeners (for other events)
   useEffect(() => {
