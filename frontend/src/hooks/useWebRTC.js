@@ -13,7 +13,6 @@ const useWebRTC = () => {
   const iceCandidatesRef = useRef([]);
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
 
   // Attempt to reconnect socket
   const attemptReconnect = useCallback(() => {
@@ -23,34 +22,9 @@ const useWebRTC = () => {
       reconnectTimeoutRef.current = null;
     }
 
-    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-      console.log('Max reconnection attempts reached, ending call');
-      dispatch(stopReconnecting());
-      // End call directly without dependency
-      if (peerConnectionRef.current) {
-        peerConnectionRef.current.close();
-        peerConnectionRef.current = null;
-      }
-      if (localStreamRef.current) {
-        localStreamRef.current.getTracks().forEach((track) => track.stop());
-        localStreamRef.current = null;
-      }
-      if (remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = null;
-      }
-      if (socket && ((isCalling && receiver) || (!isCalling && caller))) {
-        socket.emit('call-ended', {
-          to: isCalling ? receiver._id : caller._id,
-          callId,
-        });
-      }
-      dispatch(endCall());
-      return;
-    }
-
     reconnectAttemptsRef.current += 1;
     dispatch(startReconnecting());
-    console.log(`Reconnection attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts}`);
+    console.log(`Reconnection attempt ${reconnectAttemptsRef.current}`);
 
     // Set a timeout. If the socket doesn't reconnect within this time, end the call.
     // The actual socket reconnection is handled by the socket.io client itself.
