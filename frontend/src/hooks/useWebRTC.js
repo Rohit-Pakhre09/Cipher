@@ -129,13 +129,13 @@ const useWebRTC = () => {
       console.log('Connection state changed:', pc.connectionState);
       if (pc.connectionState === 'connected') {
         dispatch(acceptCall());
-      } else if (pc.connectionState === 'failed') {
-        handleEndCall();
       }
+      // Do not end call immediately on 'failed' or 'disconnected' here.
+      // Let oniceconnectionstatechange handle recovery or eventual termination.
     };
 
     return pc;
-  }, [socket, isCalling, receiver, caller, callId, dispatch, handleEndCall]);
+  }, [socket, isCalling, receiver, caller, callId, dispatch]);
 
   // Get user media
   const getUserMedia = useCallback(async () => {
