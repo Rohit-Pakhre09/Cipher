@@ -85,8 +85,29 @@ const useWebRTC = () => {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
+        // IMPORTANT: Replace with your actual TURN server details for production
+        // A TURN server is crucial for WebRTC connections behind strict NATs/firewalls.
+        // Example: { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'password' }
+        // You can use a service like Xirsys or self-host Coturn.
       ],
     });
+
+    pc.oniceconnectionstatechange = () => {
+      console.log('ICE state:', pc.iceConnectionState);
+
+      if (pc.iceConnectionState === 'disconnected') {
+        // This usually means a temporary network issue. We should wait for a bit
+        // before declaring the connection dead, as it might recover.
+        console.warn('ICE disconnected, waiting for recovery...');
+        // Consider a timeout here to eventually call handleEndCall if not recovered.
+        // For now, just logging and restarting ICE on 'failed' is a good start.
+      }
+
+      if (pc.iceConnectionState === 'failed') {
+        console.error('ICE failed, attempting to restart ICE...');
+        pc.restartIce();
+      }
+    };
 
     pc.onicecandidate = (event) => {
       if (event.candidate && socket && ((isCalling && receiver) || (!isCalling && caller))) {
