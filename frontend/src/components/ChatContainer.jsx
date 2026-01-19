@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Edit, Trash2 } from "lucide-react"; 
+import { Edit, Trash2 } from "lucide-react";
 
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
@@ -11,7 +11,7 @@ import { editMessage, deleteMessage } from "../store/chatSlice";
 import { formatMessageTime, isSameDay } from "../lib/utils.js";
 import TypingIndicator from "./common/TypingIndicator.jsx";
 
-const ChatContainer = () => {
+const ChatContainer = ({ onStartCall }) => { // Add onStartCall prop
     const { messages, isMessagesLoading, selectedUser } = useSelector((state) => state.chat);
     const { authUser, socket } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
@@ -210,8 +210,7 @@ const ChatContainer = () => {
     return (
         <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto bg-base-100 scrollbar-thin" ref={messagesContainerRef}>
-                <ChatHeader />
-
+                <ChatHeader onStartCall={() => onStartCall(selectedUser)} />
                 {/* Messages */}
                 <div className="p-4 space-y-4">
                     {renderMessages()}

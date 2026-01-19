@@ -170,12 +170,37 @@ export const connectSocket = (authUser) => (dispatch) => {
 
     socketInstance = io(BASE_URL, {
         query: { userId: authUser._id },
+        reconnection: true,
+        reconnectionAttempts: 10,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        timeout: 20000,
+        pingTimeout: 60000,
+        pingInterval: 25000,
+        forceNew: false,
     });
 
     dispatch(authSlice.actions.setSocket(socketInstance));
 
     socketInstance.on("getOnlineUsers", (userIds) => {
         dispatch(authSlice.actions.setOnlineUsers(userIds));
+    });
+
+    // Handle reconnection events
+    socketInstance.on("reconnect", (attempt) => {
+        console.log(`Socket reconnected after ${attempt} attempts`);
+    });
+
+    socketInstance.on("reconnect_attempt", (attempt) => {
+        console.log(`Socket reconnection attempt ${attempt}`);
+    });
+
+    socketInstance.on("reconnect_error", (error) => {
+        console.error("Socket reconnection error:", error);
+    });
+
+    socketInstance.on("reconnect_failed", () => {
+        console.error("Socket reconnection failed");
     });
 };
 

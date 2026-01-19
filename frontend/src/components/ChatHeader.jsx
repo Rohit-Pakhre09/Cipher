@@ -1,11 +1,13 @@
-import { ArrowLeft, X } from "lucide-react";
+import { ArrowLeft, X, Phone } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser } from "../store/chatSlice";
 
-const ChatHeader = () => {
+// ChatHeader now accepts onStartCall prop
+const ChatHeader = ({ onStartCall }) => {
     const dispatch = useDispatch();
     const { selectedUser } = useSelector((state) => state.chat);
     const { onlineUsers } = useSelector((state) => state.auth);
+    // Removed call-related state selectors: isCalling, isReceivingCall, isConnected
     const isOnline = onlineUsers.includes(selectedUser._id);
 
     return (
@@ -44,10 +46,23 @@ const ChatHeader = () => {
                     </div>
                 </div>
 
-                {/* Close button (desktop) */}
-                <button className="cursor-pointer hidden md:block" onClick={() => dispatch(selectUser(null))}>
-                    <X />
-                </button>
+                {/* Action buttons */}
+                <div className="flex items-center gap-2">
+                    {/* Call button */}
+                    <button
+                        className="btn btn-ghost btn-circle"
+                        // The disabled state will now be handled by the parent component (HomePage)
+                        // as it holds the global call state.
+                        onClick={onStartCall} // Use the prop for starting the call
+                    >
+                        <Phone />
+                    </button>
+
+                    {/* Close button (desktop) */}
+                    <button className="cursor-pointer hidden md:block" onClick={() => dispatch(selectUser(null))}>
+                        <X />
+                    </button>
+                </div>
             </div>
         </div>
     );
