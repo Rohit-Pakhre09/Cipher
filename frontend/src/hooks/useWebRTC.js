@@ -261,7 +261,7 @@ const useWebRTC = () => {
     }
   }, [isCalling, receiver, startCall]);
 
-  // Socket event listeners
+  // Dedicated useEffect for incoming call listener
   useEffect(() => {
     if (!socket) return;
 
@@ -275,6 +275,19 @@ const useWebRTC = () => {
       }));
     };
 
+    socket.on('call-user', handleIncomingCall);
+
+    return () => {
+      socket.off('call-user', handleIncomingCall);
+    };
+  }, [socket, dispatch, authUser]); // Minimal dependencies for incoming call listener
+
+  // Socket event listeners (for other events)
+  useEffect(() => {
+    if (!socket) return;
+
+    // Remove: const handleIncomingCall = (...)
+    // Remove: socket.on('call-user', handleIncomingCall);
     const handleCallAccepted = async (data) => {
       console.log('Call accepted, setting remote description');
       if (peerConnectionRef.current) {
@@ -351,7 +364,6 @@ const useWebRTC = () => {
       }
     };
 
-    socket.on('call-user', handleIncomingCall);
     socket.on('call-accepted', handleCallAccepted);
     socket.on('call-rejected', handleCallRejected);
     socket.on('call-ended', handleCallEnded);
@@ -360,7 +372,6 @@ const useWebRTC = () => {
     socket.on('disconnect', handleDisconnect);
 
     return () => {
-      socket.off('call-user', handleIncomingCall);
       socket.off('call-accepted', handleCallAccepted);
       socket.off('call-rejected', handleCallRejected);
       socket.off('call-ended', handleCallEnded);
@@ -368,7 +379,8 @@ const useWebRTC = () => {
       socket.off('connect', handleConnect); // Cleanup connect listener
       socket.off('disconnect', handleDisconnect);
     };
-  }, [socket, dispatch, handleEndCall, isCalling, isReceivingCall, isConnected, authUser?._id, attemptReconnect]);
+  }, [socket, dispatch, handleEndCall, isCalling, isReceivingCall, isConnected, authUser?._id, attemptReconnect, peerConnectionRef, iceCandidatesRef, reconnectTimeoutRef, reconnectAttemptsRef, remoteAudioRef, localStreamRef]);
+
 
   // Cleanup on unmount
   useEffect(() => {
