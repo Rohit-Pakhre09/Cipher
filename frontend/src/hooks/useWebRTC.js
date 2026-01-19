@@ -85,12 +85,34 @@ const useWebRTC = () => {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' },
-        // IMPORTANT: Replace with your actual TURN server details for production
-        // A TURN server is crucial for WebRTC connections behind strict NATs/firewalls.
-        // Example: { urls: 'turn:your-turn-server.com:3478', username: 'user', credential: 'password' }
-        // You can use a service like Xirsys or self-host Coturn.
+        // IMPORTANT: Configure your actual TURN server details for production.
+        // A TURN server is crucial for WebRTC connections behind strict NATs/firewalls,
+        // facilitating relay when direct peer-to-peer (P2P) connections fail.
+        // Example: { urls: 'turn:your-turn-server.com:3478?transport=udp', username: 'user', credential: 'password' }
+        // You can use a service like Xirsys, Twilio, or self-host Coturn.
       ],
+      // Recommended for better audio/video bundling and efficiency
+      bundlePolicy: 'max-bundle',
+      // 'unified-plan' is the modern SDP (Session Description Protocol) semantics
+      sdpSemantics: 'unified-plan',
+      // Optionally, increase ICE candidate pool size for faster connection establishment
+      // iceCandidatePoolSize: 10, // Uncomment and adjust as needed
     });
+    // For optimal audio quality, ensure Opus codec is preferred.
+    // This often needs to be configured on the RTCRtpTransceiver after it's created,
+    // for example, when adding tracks:
+    // peerConnectionRef.current.getTransceivers().forEach(transceiver => {
+    //   if (transceiver.receiver.track.kind === 'audio') {
+    //     const capabilities = RTCRtpSender.getCapabilities('audio');
+    //     if (capabilities && capabilities.codecs) {
+    //       const opusCodec = capabilities.codecs.find(c => c.mimeType === 'audio/opus');
+    //       if (opusCodec) {
+    //         transceiver.setCodecPreferences([opusCodec]);
+    //       }
+    //     }
+    //   }
+    // });
+
 
     pc.oniceconnectionstatechange = () => {
       console.log('ICE state:', pc.iceConnectionState);
