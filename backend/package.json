@@ -4,6 +4,7 @@
   "description": "Backend service providing real-time messaging, authentication, and user management.",
   "main": "src/index.js",
   "scripts": {
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
   "keywords": [
