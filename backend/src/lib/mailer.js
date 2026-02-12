@@ -33,9 +33,6 @@ const generateResetPasswordHTML = ({ name = "", resetUrl, expiresIn = "1 hour" }
               <a href="${resetUrl}" style="background:#2563eb;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;display:inline-block;font-weight:600;">Reset password</a>
             </p>
 
-            <p style="margin:0 0 12px;color:#6b7280;">If the button doesn’t work, copy and paste the following link into your browser:</p>
-            <p style="word-break:break-all;color:#2563eb;">${resetUrl}</p>
-
             <hr style="margin:24px 0;border:none;border-top:1px solid #eef2f7" />
             <p style="margin:0;color:#6b7280;font-size:13px;">If you didn’t request a password reset, you can safely ignore this email — your password won’t change. If you’re having trouble, reply to this email and our support team will help.</p>
 

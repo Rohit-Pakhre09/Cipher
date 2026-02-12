@@ -34,8 +34,6 @@ export const signup = async (req, res) => {
         });
 
         if (newUser) {
-            const { accessToken, refreshToken } = generateToken(newUser._id, res);
-            newUser.refreshToken = refreshToken;
             await newUser.save();
 
             res.status(201).json({
@@ -125,12 +123,12 @@ export const forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
 
-        
+
         if (!user) {
             return res.status(200).json({ message: "Password reset email sent!" });
         }
 
-        
+
         if (passwordResetCooldowns.has(email)) {
             console.log(`Cooldown active for ${email}. Not sending another password reset email yet.`);
             return res.status(200).json({ message: "Password reset email sent!" });
@@ -138,22 +136,22 @@ export const forgotPassword = async (req, res) => {
 
         const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_RESET_SECRET || process.env.JWT_SECRET, { expiresIn: "1h" });
         user.passwordResetToken = resetToken;
-        user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+        user.passwordResetExpires = Date.now() + 3600000;
         await user.save();
 
         const resetUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
-        
+
         passwordResetCooldowns.set(email, true);
         setTimeout(() => {
             passwordResetCooldowns.delete(email);
         }, COOLDOWN_PERIOD_MS);
 
-        
+
         try {
             if (!process.env.RESEND_API_KEY) {
                 console.log("RESEND_API_KEY not set. Skipping email send.");
-                
+
             } else {
                 const sendResult = await sendResetEmail(user.email, resetUrl, user.fullName);
                 console.log("Password reset email sent to", user.email);
@@ -161,7 +159,7 @@ export const forgotPassword = async (req, res) => {
             }
         } catch (err) {
             console.log("Failed to send reset email:", err);
-            
+
         }
 
         res.status(200).json({ message: "Password reset email sent!" });
