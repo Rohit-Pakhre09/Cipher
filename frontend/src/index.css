@@ -12,8 +12,8 @@
 }
 
 .chat-date span {
-    background-color: #3f3f46; /* zinc-700 */
-    color: #d4d4d8; /* zinc-300 */
+    background-color: #3f3f46; 
+    color: #d4d4d8; 
     padding: 5px 10px;
     border-radius: 10px;
 }

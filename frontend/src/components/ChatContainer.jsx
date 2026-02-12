@@ -11,7 +11,8 @@ import { editMessage, deleteMessage } from "../store/chatSlice";
 import { formatMessageTime, isSameDay } from "../lib/utils.js";
 import TypingIndicator from "./common/TypingIndicator.jsx";
 
-const ChatContainer = ({ onStartCall }) => { // Add onStartCall prop
+
+const ChatContainer = () => {
     const { messages, isMessagesLoading, selectedUser } = useSelector((state) => state.chat);
     const { authUser, socket } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
@@ -210,8 +211,7 @@ const ChatContainer = ({ onStartCall }) => { // Add onStartCall prop
     return (
         <div className="flex-1 flex flex-col overflow-hidden">
             <div className="flex-1 overflow-y-auto bg-base-100 scrollbar-thin" ref={messagesContainerRef}>
-                <ChatHeader onStartCall={() => onStartCall(selectedUser)} />
-                {/* Messages */}
+                <ChatHeader />
                 <div className="p-4 space-y-4">
                     {renderMessages()}
                     <div ref={typingIndicatorRef}>
@@ -222,7 +222,6 @@ const ChatContainer = ({ onStartCall }) => { // Add onStartCall prop
 
             <MessageInput />
 
-            {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <div className="modal modal-open">
                     <div className="modal-box">

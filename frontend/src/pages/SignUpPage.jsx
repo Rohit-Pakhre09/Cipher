@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { signup } from "../store/authSlice";
 import { Eye, EyeOff, Loader2, MessageSquare } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import AuthImagePattern from "../components/AuthImagePattern";
 import { useForm } from "react-hook-form";
@@ -40,6 +40,7 @@ const signupSchema = z.object({
 const SignUpPage = () => {
     const [showPassword, setShowPassword] = useState(false);
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const { isSigningUp } = useSelector((state) => state.auth);
 
     const {
@@ -50,18 +51,19 @@ const SignUpPage = () => {
         resolver: zodResolver(signupSchema),
     });
 
-    const onSubmit = (data) => {
-        dispatch(signup(data));
+    const onSubmit = async (data) => {
+        const resultAction = await dispatch(signup(data));
+        if (signup.fulfilled.match(resultAction)) {
+            navigate("/login");
+        }
     };
 
     return (
         <section className="h-[calc(100vh)] overflow-y-auto grid lg:grid-cols-2">
 
-            {/* 1. Left Content */}
             <div className="flex flex-col justify-center items-center">
                 <div className="w-full max-w-md space-y-6">
 
-                    {/* Header Section */}
                     <div className="text-center">
                         <div className="flex flex-col items-center gap-2 group">
                             <div
@@ -75,7 +77,6 @@ const SignUpPage = () => {
                         </div>
                     </div>
 
-                    {/* Sign Up Form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6 py-4">
 
                         <div className="form-control">
@@ -96,7 +97,6 @@ const SignUpPage = () => {
                             {errors.fullName && <p className="text-red-500 text-sm mt-1">{errors.fullName.message}</p>}
                         </div>
 
-                        {/* Email Field */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-medium">Email</span>
@@ -115,13 +115,11 @@ const SignUpPage = () => {
                             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
                         </div>
 
-                        {/* Password Field */}
                         <div className="form-control">
                             <label className="label">
                                 <span className="label-text font-medium">Password</span>
                             </label>
                             <div className="relative">
-                                {/* SVG ICON WRAPPER: ADDED inset-y-0 */}
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <LockSvg className="size-5 text-base-content/40 z-50" />
                                 </div>
@@ -146,7 +144,6 @@ const SignUpPage = () => {
                             {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
                         </div>
 
-                        {/* Submit Button */}
                         <button type="submit" className="btn btn-primary w-full mt-8" disabled={isSigningUp}>
                             {isSigningUp ? (
                                 <>
@@ -159,7 +156,6 @@ const SignUpPage = () => {
                         </button>
                     </form>
 
-                    {/* Sign In Link */}
                     <div className="text-center">
                         <p className="text-base-content/60">
                             Already have an account?{" "}
@@ -171,7 +167,6 @@ const SignUpPage = () => {
                 </div>
             </div>
 
-            {/* 2. Right Content: AuthImagePattern Component */}
             <AuthImagePattern
                 title="Chat on Cipher"
                 subtitle="Connect with friends, share moments, and stay in touch with your loved ones."

@@ -27,11 +27,10 @@ export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, { dispatch
     }
 });
 
-export const signup = createAsyncThunk("auth/signup", async (data, { dispatch, rejectWithValue }) => {
+export const signup = createAsyncThunk("auth/signup", async (data, { rejectWithValue }) => {
     try {
         const res = await API.post("/auth/signup", data);
         toast.success("Account created successfully");
-        dispatch(connectSocket(res.data));
         return res.data;
     } catch (error) {
         toast.error(error.response?.data?.message || error.message);
@@ -122,8 +121,8 @@ const authSlice = createSlice({
             .addCase(signup.pending, (state) => {
                 state.isSigningUp = true;
             })
-            .addCase(signup.fulfilled, (state, action) => {
-                state.authUser = action.payload;
+            .addCase(signup.fulfilled, (state) => {
+                state.authUser = null;
                 state.isSigningUp = false;
             })
             .addCase(signup.rejected, (state, action) => {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUsers, selectUser } from "../store/chatSlice";
 import { Users } from "lucide-react";
@@ -8,15 +8,12 @@ const Sidebar = () => {
     const dispatch = useDispatch();
     const { users, selectedUser, isUsersLoading } = useSelector((state) => state.chat);
     const { onlineUsers } = useSelector((state) => state.auth);
-    const [showOnlineOnly, setShowOnlineOnly] = useState(false);
 
     useEffect(() => {
         dispatch(getUsers());
     }, [dispatch]);
 
-    const filteredUsers = showOnlineOnly
-        ? users.filter((user) => onlineUsers.includes(user._id))
-        : users;
+    const filteredUsers = users;
 
     if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -27,17 +24,7 @@ const Sidebar = () => {
                     <Users className="size-6" />
                     <span className="font-medium">Contacts</span>
                 </div>
-
-                <div className="mt-3 flex items-center gap-2">
-                    <label className="cursor-pointer flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={showOnlineOnly}
-                            onChange={(e) => setShowOnlineOnly(e.target.checked)}
-                            className="checkbox checkbox-sm"
-                        />
-                        <span className="text-sm">Show online only</span>
-                    </label>
+                <div className="mt-3">
                     <span className="text-xs text-zinc-500">({onlineUsers.length > 0 ? onlineUsers.length - 1 : 0} online)</span>
                 </div>
             </div>

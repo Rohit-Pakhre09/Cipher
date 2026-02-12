@@ -51,7 +51,6 @@ const ProfilePage = () => {
             <p className="mt-2 text-sm md:text-base">Your profile information</p>
           </div>
 
-          {/* Avatar upload section */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
               <img

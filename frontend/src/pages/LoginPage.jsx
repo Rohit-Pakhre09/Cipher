@@ -32,10 +32,8 @@ const LoginPage = () => {
 
   return (
     <div className="h-[calc(100vh)] overflow-y-auto grid lg:grid-cols-2">
-      {/* Left Side - Form */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          {/* Logo */}
           <div className="text-center">
             <div className="flex flex-col items-center gap-2 group">
               <div
@@ -75,9 +73,6 @@ const LoginPage = () => {
                 <label className="label" htmlFor="password-input">
                   <span className="label-text font-medium">Password</span>
                 </label>
-                <Link to="/forgot-password" className="link link-primary text-sm">
-                  Forgot password?
-                </Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -91,6 +86,7 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   {...register("password")}
                 />
+
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
@@ -102,9 +98,17 @@ const LoginPage = () => {
                     <Eye className="h-5 w-5 text-base-content/40 z-50" />
                   )}
                 </button>
+
               </div>
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password.message}</p>}
+
+              <div className="text-end">
+                <Link to="/forgot-password" className="link link-primary text-sm">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
+
 
             <button type="submit" className="btn btn-primary w-full" disabled={isLoggingIn}>
               {isLoggingIn ? (
