@@ -8,12 +8,25 @@ import { app } from "./lib/socket.js";
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+const allowedOrigins = [
+    'https://cipher-web-chat.vercel.app',
+    'https://cipher-web-chat.vercel.app/',
+    'http://localhost:3000',
+];
+
 app.use(cors(
     {
-        origin: process.env.CORS_ORIGIN,
+        origin: (origin, callback) => {
+            if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
         credentials: true,
     }
 ));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/messages", messageRoutes);
+app.use("/auth", authRoutes);
+app.use("/messages", messageRoutes);
