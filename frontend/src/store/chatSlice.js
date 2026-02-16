@@ -31,7 +31,7 @@ export const getUsers = createAsyncThunk(
             if (!isUnauthorizedError(error)) {
                 toast.error(error.response?.data?.message || "Failed to fetch users");
             }
-            return rejectWithValue(error.response.data);
+            return rejectWithValue(error.response?.data || { message: "Failed to fetch users" });
         }
     },
     {

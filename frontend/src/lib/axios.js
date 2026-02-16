@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const ACCESS_TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY;
+const ACCESS_TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY || "cipher_access_token";
 
 export const getStoredAccessToken = () => localStorage.getItem(ACCESS_TOKEN_KEY);
 export const setStoredAccessToken = (token) => {

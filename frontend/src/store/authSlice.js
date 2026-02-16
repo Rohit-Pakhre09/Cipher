@@ -4,9 +4,32 @@ import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
+const AUTH_USER_KEY = "cipher_auth_user";
+
+const getPersistedAuthUser = () => {
+    try {
+        const raw = localStorage.getItem(AUTH_USER_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
+
+const persistAuthUser = (user) => {
+    try {
+        if (!user) {
+            localStorage.removeItem(AUTH_USER_KEY);
+            return;
+        }
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+    } catch {
+        // no-op if storage is unavailable
+    }
+};
 
 const initialState = {
-    authUser: null,
+    authUser: getPersistedAuthUser(),
     socket: null,
     onlineUsers: [],
     isCheckingAuth: true,
@@ -27,15 +50,22 @@ const toAuthUser = (payload) => {
 export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, { dispatch, rejectWithValue }) => {
     try {
         const res = await API.get("/auth/check");
+        if (res.data?.accessToken) {
+            setStoredAccessToken(res.data.accessToken);
+        }
         dispatch(connectSocket(toAuthUser(res.data)));
         return res.data;
     } catch (error) {
         if (error.response?.status === 401) {
             clearStoredAccessToken();
+            persistAuthUser(null);
             return rejectWithValue(null);
         }
         console.log("Error in checkAuth: ", error);
-        return rejectWithValue(error.response?.data);
+        return rejectWithValue({
+            status: error.response?.status ?? null,
+            message: error.response?.data?.message || error.message || "Auth check failed",
+        });
     }
 });
 
@@ -127,12 +157,16 @@ const authSlice = createSlice({
             })
             .addCase(checkAuth.fulfilled, (state, action) => {
                 state.authUser = toAuthUser(action.payload);
+                persistAuthUser(state.authUser);
                 state.isCheckingAuth = false;
             })
             .addCase(checkAuth.rejected, (state, action) => {
-                state.authUser = null;
                 state.isCheckingAuth = false;
                 state.error = action.payload || null;
+                if (action.payload === null) {
+                    state.authUser = null;
+                    persistAuthUser(null);
+                }
             })
             .addCase(signup.pending, (state) => {
                 state.isSigningUp = true;
@@ -150,6 +184,7 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.authUser = toAuthUser(action.payload);
+                persistAuthUser(state.authUser);
                 state.isLoggingIn = false;
             })
             .addCase(login.rejected, (state, action) => {
@@ -160,6 +195,7 @@ const authSlice = createSlice({
                 state.authUser = action.payload;
                 state.socket = null;
                 state.onlineUsers = [];
+                persistAuthUser(null);
             })
             .addCase(logout.rejected, (state, action) => {
                 state.error = action.error.message;
@@ -169,6 +205,7 @@ const authSlice = createSlice({
             })
             .addCase(updateProfile.fulfilled, (state, action) => {
                 state.authUser = action.payload;
+                persistAuthUser(state.authUser);
                 state.isUpdatingProfile = false;
             })
             .addCase(updateProfile.rejected, (state, action) => {
