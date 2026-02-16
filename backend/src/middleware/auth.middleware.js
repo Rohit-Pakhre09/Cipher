@@ -3,13 +3,25 @@ import User from "../models/user.model.js";
 
 export const protectRoute = async (req, res, next) => {
     try {
-        const token = req.cookies.jwt;
+        let token = req.cookies.jwt;
+
+        if (!token) {
+            const authHeader = req.headers.authorization || "";
+            if (authHeader.startsWith("Bearer ")) {
+                token = authHeader.slice(7);
+            }
+        }
 
         if (!token) {
             return res.status(401).json({ message: "Unauthorized - No Token Provided" });
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_SECRET);
+        } catch (jwtError) {
+            return res.status(401).json({ message: "Unauthorized - Invalid Token" });
+        }
 
         if (!decoded) {
             return res.status(401).json({ message: "Unauthorized - Invalid Token" });
@@ -22,7 +34,7 @@ export const protectRoute = async (req, res, next) => {
         }
 
         req.user = user;
-        next()
+        next();
     } catch (error) {
         console.log("There is some server error", error.message);
         res.status(500).json({ message: "There is some server error" });

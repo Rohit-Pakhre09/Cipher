@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { API } from "../lib/axios.js";
+import { API, clearStoredAccessToken, setStoredAccessToken } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
@@ -16,13 +16,22 @@ const initialState = {
     error: null,
 };
 
+const toAuthUser = (payload) => {
+    if (!payload) return null;
+    const user = { ...payload };
+    delete user.accessToken;
+    delete user.refreshToken;
+    return user;
+};
+
 export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, { dispatch, rejectWithValue }) => {
     try {
         const res = await API.get("/auth/check");
-        dispatch(connectSocket(res.data));
+        dispatch(connectSocket(toAuthUser(res.data)));
         return res.data;
     } catch (error) {
         if (error.response?.status === 401) {
+            clearStoredAccessToken();
             return rejectWithValue(null);
         }
         console.log("Error in checkAuth: ", error);
@@ -44,8 +53,11 @@ export const signup = createAsyncThunk("auth/signup", async (data, { rejectWithV
 export const login = createAsyncThunk("auth/login", async (data, { dispatch, rejectWithValue }) => {
     try {
         const res = await API.post("/auth/login", data);
+        if (res.data?.accessToken) {
+            setStoredAccessToken(res.data.accessToken);
+        }
         toast.success("Logged in successfully");
-        dispatch(connectSocket(res.data));
+        dispatch(connectSocket(toAuthUser(res.data)));
         return res.data;
     } catch (error) {
         toast.error(error.response?.data?.message || error.message);
@@ -78,6 +90,7 @@ export const resetPassword = createAsyncThunk("auth/resetPassword", async ({ tok
 export const logout = createAsyncThunk("auth/logout", async (_, { getState }) => {
     try {
         await API.post("/auth/logout");
+        clearStoredAccessToken();
         const { socket } = getState().auth;
         if (socket) {
             socket.disconnect();
@@ -113,7 +126,7 @@ const authSlice = createSlice({
                 state.isCheckingAuth = true;
             })
             .addCase(checkAuth.fulfilled, (state, action) => {
-                state.authUser = action.payload;
+                state.authUser = toAuthUser(action.payload);
                 state.isCheckingAuth = false;
             })
             .addCase(checkAuth.rejected, (state, action) => {
@@ -136,7 +149,7 @@ const authSlice = createSlice({
                 state.isLoggingIn = true;
             })
             .addCase(login.fulfilled, (state, action) => {
-                state.authUser = action.payload;
+                state.authUser = toAuthUser(action.payload);
                 state.isLoggingIn = false;
             })
             .addCase(login.rejected, (state, action) => {

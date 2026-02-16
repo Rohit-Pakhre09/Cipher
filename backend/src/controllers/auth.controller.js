@@ -74,7 +74,8 @@ export const login = async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
-            profilePic: user.profilePic
+            profilePic: user.profilePic,
+            accessToken,
         });
     } catch (error) {
         console.log("Error in login controller", error.message);
@@ -87,7 +88,12 @@ export const logout = async (req, res) => {
     try {
         const userId = req.user._id;
         await User.findByIdAndUpdate(userId, { refreshToken: null });
-        res.cookie("jwt", "", { maxAge: 0, httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "strict" });
+        res.cookie("jwt", "", {
+            maxAge: 0,
+            httpOnly: true,
+            secure: process.env.NODE_ENV !== "development",
+            sameSite: process.env.NODE_ENV === "development" ? "lax" : "none",
+        });
         res.status(200).json({ message: "Logged out successfully" });
     } catch (error) {
         console.log("Error in logout controller", error.message);

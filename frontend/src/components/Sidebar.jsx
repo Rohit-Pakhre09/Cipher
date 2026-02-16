@@ -33,6 +33,7 @@ const Sidebar = () => {
     );
 
     const onlineUserIds = new Set((onlineUsers || []).map((id) => String(id)));
+    const totalContacts = users.length;
     const onlineCount = (onlineUsers || []).filter((id) => String(id) !== String(authUser?._id)).length;
 
     if (isUsersLoading) return <SidebarSkeleton />;
@@ -45,7 +46,7 @@ const Sidebar = () => {
                     <span className="font-medium">Contacts</span>
                 </div>
                 <div className="mt-3">
-                    <span className="text-xs text-zinc-500">({onlineCount} online)</span>
+                    <span className="text-xs text-zinc-500">{totalContacts} contacts . {onlineCount} online</span>
                 </div>
                 <div className="mt-3 relative">
                     <Search className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 size-4 text-base-content/60" />
