@@ -22,6 +22,13 @@ Cipher is a modern and feature-rich real-time chat application built with the ME
 -   **Cloud-Based Image Uploads:** Utilizes Cloudinary for efficient and scalable image handling.
 -   **Responsive Design:** Fully responsive user interface that works on all screen sizes.
 
+## Sneak Peak📸
+![Login Page](./frontend/src/assets/Login-Page.png)
+![Home Page](./frontend/src/assets/Home-Page.png)
+
+## Video📹
+![App Video](./frontend/src/assets/Cipher.gif)
+
 ## Tech Stack
 
 ### Frontend
