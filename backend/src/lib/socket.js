@@ -6,13 +6,19 @@ import Message from "../models/message.model.js";
 export const app = express();
 export const server = http.createServer(app);
 
+const socketCorsOrigins = [
+    "https://cipher-web-chat.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+];
+
+if (process.env.CORS_ORIGIN) {
+    socketCorsOrigins.push(process.env.CORS_ORIGIN);
+}
+
 export const io = new Server(server, {
     cors: {
-        origin: [
-            'https://cipher-web-chat.vercel.app',
-            'https://cipher-web-chat.vercel.app/',
-            'http://localhost:3000',
-        ],
+        origin: socketCorsOrigins,
         credentials: true,
     }
 });
@@ -20,10 +26,6 @@ export const io = new Server(server, {
 export function getReceiverSocketId(userId) {
     return userSocketMap[userId];
 };
-
-export function getOnlineUserIds() {
-    return Object.keys(userSocketMap);
-}
 
 const userSocketMap = {
 
@@ -41,8 +43,8 @@ io.on("connection", (socket) => {
     socket.on("messageDelivered", async ({ messageId, receiverId }) => {
         try {
             const message = await Message.findById(messageId);
-            if (message && message.status !== 'read') {
-                message.status = 'delivered';
+            if (message && message.status !== "read") {
+                message.status = "delivered";
                 await message.save();
 
                 const senderSocketId = userSocketMap[message.senderId];
@@ -61,9 +63,9 @@ io.on("connection", (socket) => {
 
     socket.on("markAsRead", async ({ myId, userToChatId }) => {
         try {
-            const messages = await Message.find({ senderId: userToChatId, receiverId: myId, status: { $ne: 'read' } });
+            const messages = await Message.find({ senderId: userToChatId, receiverId: myId, status: { $ne: "read" } });
             for (const message of messages) {
-                message.status = 'read';
+                message.status = "read";
                 await message.save();
 
                 const senderSocketId = userSocketMap[message.senderId];

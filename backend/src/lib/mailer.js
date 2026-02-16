@@ -66,5 +66,3 @@ export const sendResetEmail = async (to, resetUrl, name) => {
   const html = generateResetPasswordHTML({ name, resetUrl });
   return resend({ to, subject, text, html });
 };
-
-export default { resend, sendResetEmail };
