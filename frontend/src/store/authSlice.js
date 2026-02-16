@@ -23,8 +23,8 @@ const persistAuthUser = (user) => {
             return;
         }
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-    } catch {
-        // no-op if storage is unavailable
+    } catch(error) {
+        console.log(error);
     }
 };
 
@@ -238,7 +238,6 @@ export const connectSocket = (authUser) => (dispatch) => {
         dispatch(authSlice.actions.setOnlineUsers(userIds));
     });
 
-    // Handle reconnection events
     socketInstance.on("reconnect", (attempt) => {
         console.log(`Socket reconnected after ${attempt} attempts`);
     });
