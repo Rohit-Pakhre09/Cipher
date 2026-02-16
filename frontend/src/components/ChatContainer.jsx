@@ -186,7 +186,7 @@ const ChatContainer = () => {
                                 <img
                                     src={message.image}
                                     alt="Attachment"
-                                    className="sm:max-w-[200px] rounded-md mb-2"
+                                    className="sm:max-w-50 rounded-md mb-2"
                                 />
                             )}
                             {editingMessage && editingMessage._id === message._id ? (
