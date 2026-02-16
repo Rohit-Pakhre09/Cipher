@@ -100,7 +100,7 @@ Follow these instructions to get a copy of the project up and running on your lo
     -   In the `frontend` directory, create a `.env` file.
     -   Add the following environment variable to point to your backend server:
         ```
-        VITE_API_BASE_URL=http://localhost:5000
+        VITE_BASE_URL=http://localhost:5000
         ```
 
 ### Running the Application
