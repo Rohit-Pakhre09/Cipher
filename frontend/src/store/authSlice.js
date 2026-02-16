@@ -22,6 +22,9 @@ export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, { dispatch
         dispatch(connectSocket(res.data));
         return res.data;
     } catch (error) {
+        if (error.response?.status === 401) {
+            return rejectWithValue(null);
+        }
         console.log("Error in checkAuth: ", error);
         return rejectWithValue(error.response?.data);
     }
@@ -116,7 +119,7 @@ const authSlice = createSlice({
             .addCase(checkAuth.rejected, (state, action) => {
                 state.authUser = null;
                 state.isCheckingAuth = false;
-                state.error = action.payload;
+                state.error = action.payload || null;
             })
             .addCase(signup.pending, (state) => {
                 state.isSigningUp = true;

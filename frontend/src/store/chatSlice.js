@@ -19,15 +19,24 @@ const toIdString = (idOrObject) => {
     return String(idOrObject);
 };
 
-export const getUsers = createAsyncThunk("chat/getUsers", async (_, { rejectWithValue }) => {
-    try {
-        const res = await API.get("/messages/users");
-        return res.data;
-    } catch (error) {
-        toast.error(error.response.data.message);
-        return rejectWithValue(error.response.data);
+export const getUsers = createAsyncThunk(
+    "chat/getUsers",
+    async (_, { rejectWithValue }) => {
+        try {
+            const res = await API.get("/messages/users");
+            return res.data;
+        } catch (error) {
+            toast.error(error.response.data.message);
+            return rejectWithValue(error.response.data);
+        }
+    },
+    {
+        condition: (_, { getState }) => {
+            const { isUsersLoading } = getState().chat;
+            return !isUsersLoading;
+        },
     }
-});
+);
 
 export const getMessages = createAsyncThunk("chat/getMessages", async (userId, { getState }) => {
     try {

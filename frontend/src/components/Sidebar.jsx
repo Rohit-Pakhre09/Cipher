@@ -11,8 +11,9 @@ const Sidebar = () => {
     const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
+        if (!authUser?._id) return;
         dispatch(getUsers());
-    }, [dispatch]);
+    }, [dispatch, authUser?._id]);
 
     useEffect(() => {
         if (selectedUser || users.length === 0) return;
