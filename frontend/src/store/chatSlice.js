@@ -19,6 +19,8 @@ const toIdString = (idOrObject) => {
     return String(idOrObject);
 };
 
+const isUnauthorizedError = (error) => error?.response?.status === 401;
+
 export const getUsers = createAsyncThunk(
     "chat/getUsers",
     async (_, { rejectWithValue }) => {
@@ -26,7 +28,9 @@ export const getUsers = createAsyncThunk(
             const res = await API.get("/messages/users");
             return res.data;
         } catch (error) {
-            toast.error(error.response.data.message);
+            if (!isUnauthorizedError(error)) {
+                toast.error(error.response?.data?.message || "Failed to fetch users");
+            }
             return rejectWithValue(error.response.data);
         }
     },
@@ -57,7 +61,9 @@ export const getMessages = createAsyncThunk("chat/getMessages", async (userId, {
         }
         return messages;
     } catch (error) {
-        toast.error(error.response.data.message);
+        if (!isUnauthorizedError(error)) {
+            toast.error(error.response?.data?.message || "Failed to fetch messages");
+        }
         throw error;
     }
 });
