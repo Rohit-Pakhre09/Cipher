@@ -19,7 +19,7 @@ const initialState = {
 export const checkAuth = createAsyncThunk("auth/checkAuth", async (_, { dispatch, rejectWithValue }) => {
     try {
         const res = await API.get("/auth/check");
-        dispatch(connectSocket(res.data)); 
+        dispatch(connectSocket(res.data));
         return res.data;
     } catch (error) {
         console.log("Error in checkAuth: ", error);
@@ -101,7 +101,7 @@ const authSlice = createSlice({
             state.socket = action.payload;
         },
         setOnlineUsers: (state, action) => {
-            state.onlineUsers = action.payload;
+            state.onlineUsers = (action.payload || []).map((id) => String(id));
         },
     },
     extraReducers: (builder) => {
@@ -203,5 +203,4 @@ export const connectSocket = (authUser) => (dispatch) => {
     });
 };
 
-export const { setSocket, setOnlineUsers } = authSlice.actions;
 export default authSlice.reducer;

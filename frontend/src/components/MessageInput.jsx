@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { sendMessage } from "../store/chatSlice";
 import { Image, Send, X } from "lucide-react";
@@ -13,9 +13,29 @@ const MessageInput = () => {
     const { socket, authUser } = useSelector((state) => state.auth);
     const typingTimeoutRef = useRef(null);
 
+    useEffect(() => {
+        return () => {
+            if (typingTimeoutRef.current) {
+                clearTimeout(typingTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    const emitStopTyping = () => {
+        if (!socket || !selectedUser?._id || !authUser?._id) return;
+
+        socket.emit("stopTyping", {
+            receiverId: selectedUser._id,
+            senderId: authUser._id,
+        });
+    };
+
     const handleTyping = (e) => {
-        setText(e.target.value);
-        if (!socket) return;
+        const newText = e.target.value;
+        setText(newText);
+
+        if (!socket || !selectedUser?._id || !authUser?._id) return;
+
         socket.emit("typing", { receiverId: selectedUser._id, senderId: authUser._id });
 
         if (typingTimeoutRef.current) {
@@ -23,13 +43,13 @@ const MessageInput = () => {
         }
 
         typingTimeoutRef.current = setTimeout(() => {
-            socket.emit("stopTyping", { receiverId: selectedUser._id });
+            emitStopTyping();
         }, 1000);
     }
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
-        if (!file.type.startsWith("image/")) {
+        if (!file?.type?.startsWith("image/")) {
             toast.error("Please select an image file");
             return;
         }
@@ -54,14 +74,12 @@ const MessageInput = () => {
             await dispatch(sendMessage({
                 text: text.trim(),
                 image: imagePreview,
-            })).unwrap(); 
+            })).unwrap();
 
             setText("");
             setImagePreview(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
-            if (socket) {
-                socket.emit("stopTyping", { receiverId: selectedUser._id });
-            }
+            emitStopTyping();
         } catch (error) {
             console.error("Failed to send message:", error);
         }

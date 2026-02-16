@@ -18,7 +18,7 @@ const ChatContainer = () => {
     const dispatch = useDispatch();
     const messagesContainerRef = useRef(null);
     const typingIndicatorRef = useRef(null);
-    const [isTyping, setIsTyping] = useState(false);
+    const [typingUserId, setTypingUserId] = useState(null);
     const [editingMessage, setEditingMessage] = useState(null);
     const [editText, setEditText] = useState("");
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -29,6 +29,10 @@ const ChatContainer = () => {
     useEffect(() => {
         selectedUserRef.current = selectedUser;
     }, [selectedUser]);
+
+    const isTyping =
+        Boolean(selectedUser?._id) &&
+        String(typingUserId) === String(selectedUser._id);
 
     useEffect(() => {
         if (messagesContainerRef.current) {
@@ -74,7 +78,7 @@ const ChatContainer = () => {
 
     useEffect(() => {
         if (isTyping && typingIndicatorRef.current) {
-            typingIndicatorRef.current.scrollIntoView({ behavior: 'smooth' });
+            typingIndicatorRef.current.scrollIntoView({ behavior: "smooth" });
         }
     }, [isTyping]);
 
@@ -82,13 +86,21 @@ const ChatContainer = () => {
         if (!socket) return;
 
         const handleTypingEvent = (data) => {
-            if (data.senderId === selectedUserRef.current?._id) {
-                setIsTyping(true);
+            const activeUserId = selectedUserRef.current?._id;
+            if (!activeUserId) return;
+
+            if (String(data?.senderId) === String(activeUserId)) {
+                setTypingUserId(String(data.senderId));
             }
         };
 
-        const handleStopTypingEvent = () => {
-            setIsTyping(false);
+        const handleStopTypingEvent = (data) => {
+            const activeUserId = selectedUserRef.current?._id;
+            if (!activeUserId) return;
+
+            if (!data?.senderId || String(data.senderId) === String(activeUserId)) {
+                setTypingUserId(null);
+            }
         };
 
         socket.on("typing", handleTypingEvent);
@@ -137,7 +149,7 @@ const ChatContainer = () => {
                 messageElements.push(
                     <div
                         key={message._id}
-                        className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+                        className={`chat ${String(message.senderId) === String(authUser._id) ? "chat-end" : "chat-start"}`}
                     >
                         <div className="chat-bubble text-gray-500 italic">
                             This message was deleted
@@ -148,13 +160,13 @@ const ChatContainer = () => {
                 messageElements.push(
                     <div
                         key={message._id}
-                        className={`chat ${message.senderId === authUser._id ? "chat-end" : "chat-start"}`}
+                        className={`chat ${String(message.senderId) === String(authUser._id) ? "chat-end" : "chat-start"}`}
                     >
                         <div className="chat-image avatar">
                             <div className="size-10 rounded-full border">
                                 <img
                                     src={
-                                        message.senderId === authUser._id
+                                        String(message.senderId) === String(authUser._id)
                                             ? authUser.profilePic || "/avatar.png"
                                             : selectedUser.profilePic || "/avatar.png"
                                     }
@@ -167,7 +179,7 @@ const ChatContainer = () => {
                                 {formatMessageTime(message.createdAt)}
                                 {message.editedAt && <span className="text-xs opacity-50"> (edited)</span>}
                             </time>
-                            {message.senderId === authUser._id && <MessageStatus status={message.status} />}
+                            {String(message.senderId) === String(authUser._id) && <MessageStatus status={message.status} />}
                         </div>
                         <div className="chat-bubble flex flex-col">
                             {message.image && (
@@ -194,7 +206,7 @@ const ChatContainer = () => {
                                 message.text && <p>{message.text}</p>
                             )}
                         </div>
-                        {message.senderId === authUser._id && !message.image && !editingMessage && (
+                        {String(message.senderId) === String(authUser._id) && !message.image && !editingMessage && (
                             <div className="chat-actions">
                                 <button onClick={() => handleDeleteMessage(message._id)} className="btn btn-xs btn-ghost text-red-500"><Trash2 size={16} /></button>
                                 <button onClick={() => handleEditMessage(message)} className="btn btn-xs btn-ghost"><Edit size={16} /></button>

@@ -2,6 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { API } from "../lib/axios";
 import toast from "react-hot-toast";
 
+const SELECTED_USER_ID_KEY = "selectedChatUserId";
+
 const initialState = {
     messages: [],
     users: [],
@@ -11,7 +13,11 @@ const initialState = {
     error: null,
 };
 
-
+const toIdString = (idOrObject) => {
+    if (!idOrObject) return "";
+    if (typeof idOrObject === "object" && idOrObject._id) return String(idOrObject._id);
+    return String(idOrObject);
+};
 
 export const getUsers = createAsyncThunk("chat/getUsers", async (_, { rejectWithValue }) => {
     try {
@@ -31,11 +37,11 @@ export const getMessages = createAsyncThunk("chat/getMessages", async (userId, {
 
         const { authUser, socket } = getState().auth;
         if (socket) {
-            messages.forEach(message => {
-                if (message.status === 'sent' && String(message.receiverId) === String(authUser._id)) {
+            messages.forEach((message) => {
+                if (message.status === "sent" && toIdString(message.receiverId) === toIdString(authUser?._id)) {
                     socket.emit("messageDelivered", {
                         messageId: message._id,
-                        receiverId: authUser._id
+                        receiverId: authUser._id,
                     });
                 }
             });
@@ -81,6 +87,13 @@ export const deleteMessage = createAsyncThunk("chat/deleteMessage", async (messa
 
 export const selectUser = (user) => (dispatch, getState) => {
     dispatch(chatSlice.actions.setSelectedUser(user));
+
+    if (user?._id) {
+        localStorage.setItem(SELECTED_USER_ID_KEY, String(user._id));
+    } else {
+        localStorage.removeItem(SELECTED_USER_ID_KEY);
+    }
+
     if (user) {
         dispatch(getMessages(user._id));
         const { authUser, socket } = getState().auth;
@@ -93,20 +106,31 @@ export const selectUser = (user) => (dispatch, getState) => {
     }
 };
 
+export const getPersistedSelectedUserId = () => localStorage.getItem(SELECTED_USER_ID_KEY);
+
 
 export const initChatListeners = () => (dispatch, getState) => {
     const { socket } = getState().auth;
     if (!socket) return;
 
+    socket.off("newMessage");
+    socket.off("messageStatusUpdated");
+    socket.off("messagesRead");
+    socket.off("messageUpdated");
+    socket.off("messageDeleted");
+
     socket.on("newMessage", (newMessage) => {
         const { authUser } = getState().auth;
-        socket.emit("messageDelivered", {
-            messageId: newMessage._id,
-            receiverId: authUser._id,
-        });
+
+        if (toIdString(newMessage.receiverId) === toIdString(authUser?._id)) {
+            socket.emit("messageDelivered", {
+                messageId: newMessage._id,
+                receiverId: authUser._id,
+            });
+        }
 
         const { selectedUser } = getState().chat;
-        if (selectedUser && String(newMessage.senderId) === String(selectedUser._id)) {
+        if (selectedUser && toIdString(newMessage.senderId) === toIdString(selectedUser._id)) {
             dispatch(chatSlice.actions.addMessage(newMessage));
             socket.emit("markAsRead", {
                 myId: authUser._id,
@@ -121,7 +145,7 @@ export const initChatListeners = () => (dispatch, getState) => {
 
     socket.on("messagesRead", ({ readerId }) => {
         const { selectedUser } = getState().chat;
-        if (selectedUser && String(readerId) === String(selectedUser._id)) {
+        if (selectedUser && toIdString(readerId) === toIdString(selectedUser._id)) {
             dispatch(chatSlice.actions.markMessagesAsRead({ readerId, authUserId: getState().auth.authUser._id }));
         }
     });
@@ -149,38 +173,41 @@ const chatSlice = createSlice({
             state.messages.push(action.payload);
         },
         updateMessageStatus: (state, action) => {
-            const index = state.messages.findIndex(msg => msg._id === action.payload._id);
+            const index = state.messages.findIndex((msg) => toIdString(msg._id) === toIdString(action.payload._id));
             if (index !== -1) {
-                state.messages[index] = action.payload;
+                state.messages[index] = {
+                    ...state.messages[index],
+                    ...action.payload,
+                };
             }
         },
         markMessagesAsRead: (state, action) => {
             const { readerId, authUserId } = action.payload;
-            state.messages = state.messages.map(msg => {
+            state.messages = state.messages.map((msg) => {
                 if (
-                    String(msg.senderId) === String(authUserId) &&
-                    String(msg.receiverId) === String(readerId) &&
-                    msg.status !== 'read'
+                    toIdString(msg.senderId) === toIdString(authUserId) &&
+                    toIdString(msg.receiverId) === toIdString(readerId) &&
+                    msg.status !== "read"
                 ) {
-                    return { ...msg, status: 'read' };
+                    return { ...msg, status: "read" };
                 }
                 return msg;
             });
         },
         updateMessage: (state, action) => {
-            const index = state.messages.findIndex(msg => msg._id === action.payload._id);
+            const index = state.messages.findIndex((msg) => toIdString(msg._id) === toIdString(action.payload._id));
             if (index !== -1) {
-                state.messages[index] = action.payload;
+                state.messages[index] = {
+                    ...state.messages[index],
+                    ...action.payload,
+                };
             }
         },
         deleteMessageLocally: (state, action) => {
-            state.messages = state.messages.map(msg =>
-                msg._id === action.payload ? { ...msg, deleted: true, text: "" } : msg
+            state.messages = state.messages.map((msg) =>
+                toIdString(msg._id) === toIdString(action.payload) ? { ...msg, deleted: true, text: "" } : msg
             );
         },
-        clearError: (state) => {
-            state.error = null;
-        }
     },
     extraReducers: (builder) => {
         builder
@@ -213,20 +240,21 @@ const chatSlice = createSlice({
             })
 
             .addCase(editMessage.fulfilled, (state, action) => {
-                const index = state.messages.findIndex(msg => msg._id === action.payload._id);
+                const index = state.messages.findIndex((msg) => toIdString(msg._id) === toIdString(action.payload._id));
                 if (index !== -1) {
-                    state.messages[index] = action.payload;
+                    state.messages[index] = {
+                        ...state.messages[index],
+                        ...action.payload,
+                    };
                 }
             })
 
             .addCase(deleteMessage.fulfilled, (state, action) => {
-                state.messages = state.messages.map(msg =>
-                    msg._id === action.payload ? { ...msg, deleted: true, text: "" } : msg
+                state.messages = state.messages.map((msg) =>
+                    toIdString(msg._id) === toIdString(action.payload) ? { ...msg, deleted: true, text: "" } : msg
                 );
             });
     },
 });
 
-export const { clearError, updateMessage, deleteMessageLocally } = chatSlice.actions;
 export default chatSlice.reducer;
-

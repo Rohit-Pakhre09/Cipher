@@ -6,7 +6,9 @@ const ChatHeader = () => {
     const dispatch = useDispatch();
     const { selectedUser } = useSelector((state) => state.chat);
     const { onlineUsers } = useSelector((state) => state.auth);
-    const isOnline = onlineUsers.includes(selectedUser._id);
+
+    const onlineUserIds = new Set((onlineUsers || []).map((id) => String(id)));
+    const isOnline = onlineUserIds.has(String(selectedUser._id));
 
     return (
         <div className="p-2.5 border-b border-base-300 sticky top-0 z-10 bg-base-100">
