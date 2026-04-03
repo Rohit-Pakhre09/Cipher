@@ -163,7 +163,7 @@ This project is licensed under the ISC License - see the [LICENSE](LICENCE) file
 
 ### **Author**
 
--   **Deepak**
+-   **Rohit Pakhre**
     -   LinkedIn: [@Rohit Pakhre](https://www.linkedin.com/in/rohit-pakhre/)
     -   GitHub: [@Rohit Pakhre](https://github.com/Rohit-Pakhre09)
 
